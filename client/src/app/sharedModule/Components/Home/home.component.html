@@ -1,0 +1,157 @@
+<!-- <p>Home works!</p> -->
+<app-header></app-header>
+<!-- {{ this.usersDataFromDatabase|json }} -->
+<div class="container-fluid">
+
+  <div class="card bg-dark mt-4">
+    <div class="card-title m-2">
+      <h3>
+        Popup Example :
+      </h3>
+    </div>
+    <div class="card-body m-2">
+      <button class="btn btn-xs btn-danger mr-3" role="button" (click)="showmessage('Error')">Error</button>
+      <button class="btn btn-xs btn-success mr-3" role="button" (click)="showmessage('Success')">Success</button>
+      <button class="btn btn-xs btn-warning mr-3" style="color:white;" role="button" (click)="showmessage('Warning')">Warning</button>
+      <button class="btn btn-xs btn-info" role="button" (click)="showmessage('Info')">Info</button>
+    </div>
+
+  </div>
+
+  <!-- <div class="card bg-dark mt-4">
+    <div class="card-title m-2">
+      <h3>
+
+      </h3>
+    </div>
+    <div class="card-body m-2">
+      <div [innerHTML]="safeHtmlContent"></div>
+      <div appCspNonce>
+        <script>alert("Attack is Valid Hahahaha!")</script>
+      </div>
+    </div>
+  </div> -->
+
+
+
+  <div class="card bg-dark mt-4">
+    <div class="card-title m-2">
+      <h3>
+        Using Signal , Computed , Effect , Set , Update Properties Example of Signals
+      </h3>
+    </div>
+    <div class="card-body m-2">
+      <table class="table table-bordered table-hover table-dark">
+        <tr>
+          <th>FirstName</th>
+          <th>LastName</th>
+          <th>FullName</th>
+        </tr>
+        <tr>
+          <td>{{ firstName() }}</td>
+          <td>{{ lastName() }}</td>
+          <td>{{ fullName() }}</td>
+        </tr>
+      </table>
+      <br>
+      <br>
+
+      <div class="row">
+        <div class="col-md-3"><input type="text" name="firstName" id="firstName" #fname [value]="firstName()"
+            placeholder="enter First Name:" class="form-control">
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary" (click)="changeFirstName(fname.value)">change FirstName</button>
+        </div>
+
+        <div class="col-md-3"><input type="text" name="lastName" id="lastName" #lname [value]="lastName()"
+            placeholder="enter Last Name:" class="form-control">
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary" (click)="changeLastName(lname.value)">change LastName</button>
+        </div>
+      </div>
+      <br><br>
+      <hr>
+      <br><br>
+      <div>
+        <h3>add , remove ,  using set and update using Signals</h3>
+      </div>
+      <br>
+
+  <div class="row text-center">
+    <div class="col-md-2 text-center">
+      <button class="btn btn-primary mr-3" (click)="add()">add</button>
+      {{ quantity() }}
+      <button class="btn btn-danger ml-3" (click)="remove()">remove</button>
+    </div>
+  </div>
+
+  <br><br>
+  <hr>
+  <br><br>
+  <div>
+    <h3>add Employee ,  using and update in Signals</h3>
+  </div>
+  <ul>
+    <li *ngFor="let employee of employees()">
+      {{ employee.name }} - {{ employee.position }} - {{ employee.department }}
+    </li>
+  </ul>
+
+  <form #form="ngForm" [formGroup]="employeeForm" (ngSubmit)="addEmployee()">
+    <div class="row">
+      <div class="col-md-2"><input type="text" formControlName="name" name="empname" id="empname"
+          placeholder="enter emp name:" class="form-control"></div>
+      <div class="col-md-2"><input type="text" formControlName="position" name="position" id="position"
+          placeholder="enter position:" class="form-control"></div>
+      <div class="col-md-2"><input type="text" formControlName="department" name="department" id="department"
+          placeholder="enter department:" class="form-control"></div>
+      <div class="col-md-2">
+        <button class="btn btn-primary" type="submit">add</button>
+      </div>
+    </div>
+  </form>
+</div>
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+  <!-- <table class="table-responsive">
+    <tr>
+      <th>name</th>
+      <th>position</th>
+      <th>department</th>
+    </tr>
+
+  </table> -->
+  <!-- {#each $employees as employee (employee.id)}
+  <tr>
+    <td>{{ employee.name }}</td>
+    <td>{{ employee.position }}</td>
+    <td>{{ employee.department }}</td>
+  </tr>
+  {/each} -->
+
+
+
+<app-footer></app-footer>
+
+<!-- <app-file-uploader></app-file-uploader> -->
+<!-- <script>
+  const socket = io('http://localhost:3000');
+socket.on('chat-message',socket => {
+  console.log(socket);
+});
+</script> -->
+<!--
+<a (click)="redirectUser('bill')">bill</a>
+<a (click)="redirectUser('product')">Product</a> -->

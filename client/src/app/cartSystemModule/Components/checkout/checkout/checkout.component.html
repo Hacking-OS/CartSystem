@@ -1,0 +1,111 @@
+<!-- <p>checkout works!</p> -->
+<app-header></app-header>
+      <div *ngIf="this.message!=null" [ngClass]='getMessageClass(1)'>{{ this.message }}</div>
+
+        <ng-template #elseBlock><div id="center"><i>Sorry Your Cart is empty!</i></div></ng-template>
+
+<table class="table table-bordered table-hover table-dark" *ngIf="this.userCartData?.resultPriceTotal!==0 else elseBlock">
+  <tr>
+      <th>ID</th>
+      <th>name</th>
+      <th>price</th>
+      <th>description</th>
+      <th>category</th>
+      <th>Quantity</th>
+      <th>Total</th>
+  </tr>
+
+  <tr *ngFor="let person of this.userCartData?.result">
+      <!-- {{(person.status == 1) ? 'true' : 'false' }} -->
+      <!-- ngIf="this.userCartData[4][0]!=null"> -->
+      <td>{{ person.id }}</td>
+      <td> {{ person.name }}</td>
+      <td> {{ person.price }}</td>
+      <td> {{ person.description }}</td>
+      <td> {{ person.category }}</td>
+      <td> {{ person.quantity }}</td>
+      <td> {{ person.total }}</td>
+      <!-- <td> {{ person.cartId }}</td> -->
+      <!-- <td><button type="button" class="btn btn-danger btn-lg" (click)="removeFromCart(person.cartId)">DELETE</button></td> -->
+      </tr>
+      <tr>Total To Pay :{{ this.userCartData?.resultPriceTotal }}
+        <br>
+        <br>
+      <div class="radio">
+        Pay:&nbsp;&nbsp;
+        <label>
+          <input type="radio" name="input" id="input" (click)='check("CashOnDelivery")'  value="CashOnDelivery">
+          CashOnDelivery&nbsp;
+          <input type="radio" name="input" id="input2" (click)='check("CardPayMent")'  value="CardPayMent">
+          CardPayMent&nbsp;
+        </label>
+      </div>
+      </tr>
+    </table>
+
+    <form  *ngIf="this.state=='CardPayMent'" #myForm="ngForm" (ngSubmit)="submitPayment(myForm)" id="form">
+      <div class="card">
+        <div class="card-header p-0">
+          <h2 class="mb-0">
+
+                <span>Credit card</span>
+                <div class="icons">
+                  <img src="https://i.imgur.com/2ISgYja.png" width="30">
+                  <img src="https://i.imgur.com/W1vtnOV.png" width="30">
+                  <img src="https://i.imgur.com/35tC99g.png" width="30">
+                  <img src="https://i.imgur.com/2ISgYja.png" width="30">
+                </div>
+          </h2>
+        </div>
+        </div>
+
+
+        <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordionExample">
+          <div class="card-body payment-card-body">
+
+            <span class="font-weight-normal card-text">Card Number</span>
+            <div class="input col-md-5">
+
+              <i class="fa fa-credit-card"></i>
+              <input type="text" class="form-control" name='cardnumber'placeholder="0000 0000 0000 0000" [(ngModel)]="userCard.cardNumber" maxlength="21">
+
+            </div>
+
+            <div class="row mt-1 mb-2">
+              <div class="col-md-2">
+                <span class="font-weight-normal card-text">Expiry Month</span>
+                <div class="input">
+
+                  <i class="fa fa-calendar"></i>
+                  <input type="text" class="form-control" name='month' placeholder="MM" [(ngModel)]="userCard.expMonth" maxlength="2">
+                </div>
+              </div>
+
+              <div class="col-md-2">
+                <span class="font-weight-normal card-text">Expiry Year</span>
+                <div class="input">
+
+                  <i class="fa fa-calendar"></i>
+                  <input type="text" class="form-control" name='year' placeholder="YY" [(ngModel)]="userCard.expYear"maxlength="2">
+                </div>
+              </div>
+              </div>
+
+
+              <div class="col-md-4">
+                <span class="font-weight-normal card-text">CVC/CVV</span>
+                <div class="input">
+
+                  <i class="fa fa-lock"></i>
+                  <input type="text" class="form-control" placeholder="000" name='ccv' [(ngModel)]="userCard.ccv" maxlength="3">
+
+                </div>
+
+            <span class="text-muted certificate-text"><i class="fa fa-lock"></i> Your transaction is secured with ssl certificate</span>
+<button type="submit" name="submit" id="submit" style="border-radius:25px;">Submit</button>
+          </div>
+        </div>
+      </div>
+
+    </form>
+

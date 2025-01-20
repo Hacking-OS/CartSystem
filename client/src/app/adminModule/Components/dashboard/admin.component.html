@@ -1,0 +1,38 @@
+<!-- <p>admin works!</p> -->
+<app-header></app-header>
+<div id='message'  *ngIf="this.message!=null"  [ngClass]='getMessageClass(1)'>{{ this.message }}</div>
+
+
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-dark">
+    <tr>
+        <th>ID</th>
+        <th>USER</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>User-Active</th>
+        <th>Status</th>
+    </tr>
+
+    <tr *ngFor="let person of this.AdminviewRights ">
+      <!-- {{(person.status == 1) ? 'true' : 'false' }} -->
+            <td>{{ person.id }}</td>
+            <td> {{ person.name }}</td>
+            <td>{{ person.email }}</td>
+            <td>{{ person.phone }}</td>
+            <td><label class="switch">
+                <!-- <input type="checkbox" [checked]="{{(person.status == 1) ? 'true' : 'false' }}"> -->
+                <!-- <div  *ngIf="person.status === 0;else elseBlock"><input type="checkbox"></div> -->
+               <input type="checkbox" (click)="changeInput(person.id,person.status)"  [checked] = "person.status">
+                <!-- <ng-template #elseBlock><input type="checkbox" [checked]="true"></ng-template> -->
+                <span class="slider round"></span>
+              </label>
+            </td>
+            <td><span [ngClass]='getMessageClass(person.status)'>{{(person.status == 1) ? 'Active' : 'Not-Active' }}</span></td>
+    </tr>
+</table>
+</div>
+
+<h3>Bill Created : ({{ this.billDetails.bill }})</h3>
+<h3>Product count: ({{ this.billDetails.product }})</h3>
+<h3>Category Count :({{ this.billDetails.category }})</h3>

@@ -1,0 +1,7 @@
+table,
+tr,
+td {
+    /* padding: 12px; */
+    text-align: center;
+}
+tr:hover {background-color: rgba(0,0,0,.075);}

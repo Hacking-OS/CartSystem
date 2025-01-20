@@ -1,0 +1,14 @@
+
+  table,
+  tr,
+  th,
+  td {
+    /* border: 2px solid black; */
+      /* padding: 12px; */
+      text-align: center;
+  }
+  #center{
+    text-align: center;
+  }
+
+  tr:hover {background-color: rgba(0,0,0,.075);}

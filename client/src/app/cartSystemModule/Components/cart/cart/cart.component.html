@@ -1,0 +1,51 @@
+<!-- <p>cart works!</p> -->
+<app-header></app-header>
+ <div  [ngClass]="getMessageClass()" *ngIf="this.message!=null">{{ this.message }}</div>
+        <ng-template #elseBlock><div id="center"><i>Sorry Your Cart is empty!</i></div></ng-template>
+
+<table class="table table-bordered table-hover table-dark" *ngIf="this.userCartData?.length!==0 else elseBlock">
+  <tr>
+      <th>ID</th>
+      <th>name</th>
+      <th>price</th>
+      <th>description</th>
+      <th>category</th>
+      <th>Quantity</th>
+      <th>Total</th>
+      <th> Delete from Cart ?</th>
+  </tr>
+
+  <tr *ngFor="let person of this.userCartData">
+      <!-- {{(person.status == 1) ? 'true' : 'false' }} -->
+      <td>{{ person.id }}</td>
+      <td> {{ person.name }}</td>
+      <td> {{ person.price }}</td>
+      <td> {{ person.description }}</td>
+      <td> {{ person.category }}</td>
+      <td> {{ person.quantity }}</td>
+      <td> {{ person.total }}</td>
+      <!-- <td> {{ person.cartId }}</td> -->
+      <td><button type="button" class="btn btn-danger btn-lg" (click)="removeFromCart(person.cartId)"[disabled]="this.userCartData2?.length>0">DELETE</button></td>
+      </tr>
+
+  <tr *ngFor="let person of this.userCartData2">
+      <!-- {{(person.status == 1) ? 'true' : 'false' }} -->
+      <td>{{ person.id }}</td>
+      <td> {{ person.name }}</td>
+      <td> {{ person.price }}</td>
+      <td> {{ person.description }}</td>
+      <td> {{ person.category }}</td>
+      <td> {{ person.quantity }}</td>
+      <td> {{ person.total }}</td>
+      <!-- <td> {{ person.cartId }}</td> -->
+      <td><button type="button" class="btn btn-danger btn-lg" (click)="removeFromCart(person.cartId)">DELETE</button></td>
+      </tr>
+      </table>
+
+      <ng-template #elseBlock2><div id="center"><i></i></div></ng-template>
+      <span *ngFor="let person of this.userCartData2">
+      <span *ngIf="this.userCartData2?.length>0 else elseBlock2">Error ! Pleaseremove  {{ person.name }} this item to proceed with Checkout!  </span>
+      </span>
+      <button [hidden]="this.userCartData2?.length>0||this.userCartData?.length===0" type="button" class="btn btn-info btn-lg" (click)="checkoutUser()">--CHECKOUT--</button>
+
+

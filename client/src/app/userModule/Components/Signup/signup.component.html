@@ -1,0 +1,40 @@
+<!-- <p>signup works!</p> -->
+<div *ngIf="this.message!=null" style="color:white;background-color:red;border-radius:25px;text-align:center;padding:20px;">{{ this.message }}</div>
+<div class="container-fluid">
+  <form #myForm='ngForm' (ngSubmit)="postData(myForm)" class="m-5">
+   <div class="m-5">
+    <input class="form-control w-25" type="text" #name="ngModel" name="name" [(ngModel)]="userData.name"
+        placeholder="Enter FirstName: " required minlength="4">
+    <div *ngIf="name?.invalid && (name?.dirty || name?.touched)" class="alert alert-danger w-25" role="alert">
+        <div *ngIf="name?.errors?.['required']">first name is required. </div>
+        <div *ngIf="name?.errors?.['minlength']">first name must be greater than < 3. </div>
+        </div>
+        <br> <br>
+            <input class="form-control w-25" type="email" #email="ngModel" name="email" [(ngModel)]="userData.email"
+                placeholder="Enter email: " required minlength="4">
+            <div *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="alert alert-danger w-25" role="alert">
+                <div *ngIf="email?.errors?.['required']">Email is required. </div>
+                <div *ngIf="email?.errors?.['minlength']">Email must be greater than < 3. </div>
+                </div>
+                <br> <br>
+                <input class="form-control w-25" type="password" #password="ngModel" name="password"
+                    [(ngModel)]="userData.password" placeholder="Enter Password: " required minlength="4">
+                <div *ngIf="password?.invalid && (password?.dirty || password?.touched)" class="alert alert-danger w-25"
+                    role="alert">
+                    <div *ngIf="password?.errors?.['required']">Password is required. </div>
+                    <div *ngIf="password?.errors?.['minlength']">Password must be greater than < 3. </div>
+                    </div>
+                    <br> <br>
+                <input class="form-control w-25" type="number" #phone="ngModel" name="phone"
+                    [(ngModel)]="userData.phone" placeholder="Enter Phone Number: " required minlength="4">
+                <div *ngIf="phone?.invalid && (phone?.dirty || phone?.touched)" class="alert alert-danger w-25" role="alert">
+                    <div *ngIf="phone?.errors?.['required']">phone is required. </div>
+                    <div *ngIf="phone?.errors?.['minlength']">phone must be greater than < 3. </div>
+                    </div>
+                    <br> <br>
+                    <button type="submit" name="submit" [disabled]="myForm.invalid" class="btn btn-outline-primary mr-5">submit</button>
+                    <button type="button" class="btn btn-warning" (click)="redirectUser('user/login')">login</button>
+           </div>
+</form>
+</div>
+

@@ -1,0 +1,258 @@
+<!-- <p>products works!</p> -->
+<app-header></app-header>
+<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"> -->
+<!-- <div #navbar>
+  <div *ngIf="message!=null" [ngClass]="getMessageClass()" id="message" >{{ message }}</div>
+</div> -->
+<br><br><br>
+<br><br><br>
+<div class="container-fluid">
+
+  <form [hidden]="userRole==='user'" #myForm='ngForm' (ngSubmit)="myForm.form.valid?postData(myForm):'';">
+
+    <div class="container">
+      <div class="row">
+
+        <div class="col-5">
+          ProductName: <input class="form-control" type="text" #name="ngModel" name="name" [(ngModel)]="userData.name"
+            placeholder="Enter Product Name: " required minlength="4">
+          <div *ngIf="name?.invalid && (name?.dirty || name?.touched)" class="alert alert-danger" role="alert">
+            <div *ngIf="name?.errors?.['required']">Name is required. </div>
+            <div *ngIf="name?.errors?.['minlength']">Name must be greater than < 3. </div>
+            </div>
+          </div>
+
+
+          <div class="col-5">
+            ProductCategoryId:
+            <br>
+            <!-- <input class="form-control" type="number" #catID="ngModel" name="catID" [(ngModel)]="userData.catID"
+    placeholder="Enter CatID:" required minlength="4"> -->
+            <select class="form-control" name="catID" #catID="ngModel" [(ngModel)]="userData.catID">
+              <option *ngFor="let cat of catDropdown" [value]="cat.id">
+                {{ cat.name }}
+              </option>
+            </select>
+            <div *ngIf="catID?.invalid && (catID?.dirty || catID?.touched)" class="alert alert-danger" role="alert">
+              <div *ngIf="catID?.errors?.['required']">cat id is required. </div>
+              <div *ngIf="catID?.errors?.['minlength']">cat id must be greater than < 3. </div>
+              </div>
+            </div>
+
+
+            <div class="col-5">
+              ProductDescription:<input class="form-control" type="text" #description="ngModel" name="description"
+                [(ngModel)]="userData.description" placeholder="Enter Description:" required minlength="4">
+              <div *ngIf="description?.invalid && (description?.dirty || description?.touched)"
+                class="alert alert-danger" role="alert">
+                <div *ngIf="description?.errors?.['required']">description is required. </div>
+                <div *ngIf="description?.errors?.['minlength']">description must be greater than < 3. </div>
+                </div>
+              </div>
+
+              <div class="col-5">
+                ProductPrice:<input class="form-control" type="number" #price="ngModel" name="price"
+                  [(ngModel)]="userData.price" placeholder="Enter price:" required minlength="4">
+                <div *ngIf="price?.invalid && (price?.dirty || price?.touched)" class="alert alert-danger" role="alert">
+                  <div *ngIf="price?.errors?.['required']">price is required. </div>
+                  <div *ngIf="price?.errors?.['minlength']">price must be greater than < 3. </div>
+                  </div>
+                </div>
+
+                <div class="col-5 mt-3">
+                  <!-- [disabled]="myForm.invalid"(click)="formControl()"  -->
+                  <button class="btn btn-primary p-1" type="submit" name="submit"
+                    style="border-radius:5px;">submit</button>
+                </div>
+              </div>
+            </div>
+  </form>
+
+  <br>
+  <br>
+  <button class="btn btn-info btn-md" style="border-radius:25px;" (click)="onClickChange()">{{ (isUserSeeGrid)?"Change
+    To GridView":"Change To Normal-View" }}</button>
+  <br>
+  <br>
+  <br>
+  <div [hidden]="!isUserSeeGrid" class="card float-left m-4 p-2" style="width: 20rem;"
+    *ngFor="let data of usersDataFromDatabase; let i = index">
+    <img src="assets/noImage.jpg" class="card-img-top" alt="...">
+    <div class="card-body">
+      <h5 class="card-title text-primary">{{ data.name }}</h5>
+      <hr>
+      <div class="row">
+        <div class="col-md-6">
+          <b class="text-dark">Description: </b>
+        </div>
+        <div class="col-md-6">
+          <div class="hover-div">
+            <span class="custom-tooltip">{{ data.description }}</span>
+            <!-- Your content goes here [title]="data.description" -->
+            <p class="card-text text-dark btn btn-outline-success title-div" >{{ (data.description.length>8)?data.description.substring(0, 9) + "...":data.description }}</p>
+          </div>
+
+        </div>
+      </div>
+      <br>
+      <div class="row">
+        <div class="col-md-6"><b class="text-dark ">price: </b></div>
+        <div class="col-md-6">
+          <p class="text-dark ">{{ data.price }}</p>
+        </div>
+      </div>
+      <hr>
+      <div class="row">
+        <div class="col-md-6">
+          <button type="button" [hidden]="userRole==='user'" class="btn btn-info btn-md"
+            (click)="openModal(data.id,data.name,data.description,data.price,data.categoryId)"
+            style="border-radius:25px;">UPDATE</button>
+        </div>
+        <div class="col-md-6">
+          <span [hidden]="userRole==='user'"><button type="button" class="btn btn-danger btn-md"
+              (click)="productDelete(data.id)" style="border-radius:25px;">DELETE</button></span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <button class="btn btn-info btn-md" [hidden]="userRole!=='user'" style="border-radius:25px;"
+          (click)="addToCart(data.price,data.id)">Add To Cart</button>
+        </div>
+      </div>
+      <hr>
+      <div class="row" [hidden]="userRole==='user'">
+
+        @if (productStatus()[i]) {
+        <div class="col-md-6 text-center btn btn-success">Active</div>
+        }@else{
+        <div class="col-md-6 text-center btn btn-warning">inActive</div>
+        }
+
+        <div [hidden]="userRole==='user'" class="col-md-6 text-center">
+          <label class="switch">
+            <!-- <input type="checkbox" [checked]="{{(person.status == 1) ? 'true' : 'false' }}"> -->
+            <!-- <div  *ngIf="person.status === 0;else elseBlock"><input type="checkbox"></div> -->
+            <input type="checkbox" (click)="changeInput(data.id,data.status)" [checked]="data.status">
+            <!-- <ng-template #elseBlock><input type="checkbox" [checked]="true"></ng-template> -->
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <table class="table table-bordered table-hover table-dark" [hidden]="isUserSeeGrid">
+    <tr>
+      <th [hidden]="userRole==='user'">ID</th>
+      <th>Product Name</th>
+      <th>Product Category Name</th>
+      <th>Product Description</th>
+      <th>Product Price</th>
+      <th [hidden]="userRole!=='user'">Add To Cart</th>
+      <!-- <th [hidden]="userRole==='user'">Update</th>
+          <th [hidden]="userRole==='user'">Delete</th> -->
+      <th [hidden]="userRole==='user'">Actions</th>
+      <th [hidden]="userRole==='user'">Product Status</th>
+    </tr>
+
+    <tr *ngFor="let person of usersDataFromDatabase ">
+      <!-- {{(person.status == 1) ? 'true' : 'false' }} -->
+      <td [hidden]="userRole==='user'">{{ person.id }}</td>
+      <td> {{ person.name }}</td>
+      <td> {{ person.category }}</td>
+      <td> {{ person.description }}</td>
+      <td> {{ person.price }}</td>
+
+      <td [hidden]="userRole==='user'"><button type="button" class="btn btn-info btn-md p-1"
+          (click)="openModal(person.id,person.name,person.description,person.price,person.categoryId)"
+          style="border-radius:25px;">UPDATE</button>
+        |
+        <span [hidden]="userRole==='user'"><button type="button" class="btn btn-danger btn-md p-1"
+            (click)="productDelete(person.id)" style="border-radius:25px;">DELETE</button></span>
+      </td>
+      <td [hidden]="userRole!=='user'"><button type="button" class="btn btn-info btn-md" style="border-radius:25px;"
+          (click)="addToCart(person.price,person.id)">AddToCart</button></td>
+
+
+
+      <td [hidden]="userRole==='user'">
+        <label class="switch">
+          <!-- <input type="checkbox" [checked]="{{(person.status == 1) ? 'true' : 'false' }}"> -->
+          <!-- <div  *ngIf="person.status === 0;else elseBlock"><input type="checkbox"></div> -->
+          <input type="checkbox" (click)="changeInput(person.id,person.status)" [checked]="person.status">
+          <!-- <ng-template #elseBlock><input type="checkbox" [checked]="true"></ng-template> -->
+          <span class="slider round"></span>
+        </label>
+      </td>
+
+
+
+      <div class="modal" tabindex="-1" role="dialog" [ngStyle]="{'display':display}">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">
+                <div *ngIf="message!=null"
+                  style="color:white;background-color:green;border-radius:25px;text-align:center;padding:20px;">{{
+                  message }}</div>
+              </h4>
+              <button type="button" class="close" aria-label="Close" (click)="onCloseHandled()"><span
+                  aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <form #myForm='ngForm' (ngSubmit)="UpdateProduct(productData.ProductId,myForm)">
+                ProductName: <input class="form-control" type="text" #name2="ngModel" name="name"
+                  [(ngModel)]="userData.name2" required minlength="4">
+                <div *ngIf="name2?.invalid && (name2?.dirty || name2?.touched)" class="alert alert-danger" role="alert">
+                  <div *ngIf="name2?.errors?.['required']">Name is required. </div>
+                  <div *ngIf="name2?.errors?.['minlength']">Name must be greater than < 3. </div>
+                  </div>
+                  <br> <br>
+                  ProductCategoryId:
+                  <!-- <input class="form-control" type="number" #catID2="ngModel" name="catID2" [(ngModel)]="userData.catID2"
+                             required minlength="4"> -->
+                  <select name="catID2" #catID2="ngModel" [(ngModel)]="userData.catID2">
+                    <option *ngFor="let cat of catDropdown" [value]="cat.id">
+                      {{ cat.name }}
+                    </option>
+                  </select>
+                  <div *ngIf="catID2?.invalid && (catID2?.dirty || catID2?.touched)" class="alert alert-danger"
+                    role="alert">
+                    <div *ngIf="catID2?.errors?.['required']">cat id is required. </div>
+                    <div *ngIf="catID2?.errors?.['minlength']">cat id must be greater than < 3. </div>
+                    </div>
+                    <br> <br>
+                    ProductDescription<input class="form-control" type="text" #description2="ngModel" name="description"
+                      [(ngModel)]="userData.description2" required minlength="4">
+                    <div *ngIf="description2?.invalid && (description2?.dirty || description2?.touched)"
+                      class="alert alert-danger" role="alert">
+                      <div *ngIf="description2?.errors?.['required']">description is required. </div>
+                      <div *ngIf="description2?.errors?.['minlength']">description must be greater than < 3. </div>
+                      </div>
+                      <br> <br>
+                      ProductPrice:<input class="form-control" type="number" #price2="ngModel" name="price2"
+                        [(ngModel)]="userData.price2" required minlength="4">
+                      <div *ngIf="price2?.invalid && (price2?.dirty || price2?.touched)" class="alert alert-danger"
+                        role="alert">
+                        <div *ngIf="price2?.errors?.['required']">price is required. </div>
+                        <div *ngIf="price2?.errors?.['minlength']">price must be greater than < 3. </div>
+                        </div>
+                        <br> <br>
+                        <button type="submit" name="submit" class="btn btn-primary" [disabled]="myForm.invalid">submit</button>
+              </form>
+
+              <!-- <p>{{ productData.getCatId |json }}</p> -->
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" (click)="onCloseHandled()"
+                style="border-radius:25px;">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- <button style="color:blue;cursor:pointer" (click)="UpdateCategory(person.id)">forget password?</button>  -->
+
+    </tr>
+  </table>
+</div>

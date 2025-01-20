@@ -1,0 +1,21 @@
+.message-popup {
+  /* position: sticky; */
+  /* bottom: 20px;
+  right: 20px; */
+  overflow:scroll;
+  height:610px;
+}
+
+.message {
+  background-color: white;
+  color: black;
+  padding: 10px;
+  margin-bottom: 100px;
+  border-radius: 5px 5px 0px 5px;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+}
+
+form {
+  bottom:15px;
+  /* right: 20px; */
+}

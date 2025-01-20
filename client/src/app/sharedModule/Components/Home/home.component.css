@@ -1,0 +1,14 @@
+table,
+tr,
+td {
+    /* padding: 12px; */
+    text-align: center;
+}
+
+hr {
+  border: none;
+  height: 2px;
+  background-color: black; /* Change the color as needed */
+  margin: 10px 0; /* Adjust margin as needed */
+  font-weight: bold; /* Make the line bold */
+}

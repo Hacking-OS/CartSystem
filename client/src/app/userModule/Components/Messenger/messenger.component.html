@@ -1,0 +1,53 @@
+<!-- <p>messenger works!</p> -->
+<!-- {{  showMessages | json }} -->
+<app-header></app-header>
+<div class="container">
+  <div class="message-popup">
+  <div *ngFor="let message of showMessages">
+    <!-- <h3>{{ message.userName }}</h3>
+      <p>{{ message.userMessage }}</p> -->
+      <!-- <img src="/w3images/bandmember.jpg" alt="Avatar" style="width:100%;"> -->
+      <div [ngClass]="{'float-left':message.userID!==userId,'float-right':message.userID===userId}">
+        <div class="message">
+          <h3>{{ message.userName }}</h3>
+          <p>{{ message.userMessage }}</p>
+          <span class="time-right"><h3>{{ message.messagedAt|date:"yyyy-MM-dd HH:mm:ss" }}</h3></span>
+          <a class="text-primary" [hidden]="message.userID!==userId" (click)="deleteMessage(message.uuid_User)">Delete</a>
+          <!-- {{ (message.userID) === userId }} -->
+        </div>
+      </div>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+    </div>
+
+    <!-- <div class="container darker">
+   <img src="/w3images/avatar_g2.jpg" alt="Avatar" class="right" style="width:100%;">
+      <p>Nah, I dunno. Play soccer.. or learn more coding perhaps?</p>
+      <span class="time-left">11:05</span>
+    </div> -->
+  </div>
+</div>
+<br>
+<br>
+  <form #myForm='ngForm' (ngSubmit)="sendMessage(myForm)">
+
+    <input class="form-control" type="text" #email="ngModel" name="userMessage" [(ngModel)]="userMessage"
+        placeholder="Enter Message: " required minlength="4">
+    <div *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="alert alert-danger" role="alert">
+        <div *ngIf="email?.errors?.['required']">Message is required. </div>
+        <div *ngIf="email?.errors?.['minlength']">Message must be greater than < 3. </div>
+        </div>
+        <br> <br>
+
+        <button class="btn btn-primary" type="submit" name="submit" [disabled]="myForm.invalid">submit</button>
+</form>

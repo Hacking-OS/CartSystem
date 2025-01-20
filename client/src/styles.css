@@ -1,0 +1,16 @@
+/* You can add global styles to this file, and also import other style files */
+@import "../node_modules/ngx-toastr/toastr.css";
+@import "../node_modules/ngx-toasta/styles/style-bootstrap.css";
+@import "../node_modules/ngx-toasta/styles/style-default.css";
+@import "../node_modules/ngx-toasta/styles/style-material.css";
+
+
+html, body {
+  height: 100%;
+  background-color:#212529;
+  color:white;
+ }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif;  background-color:#212529;
+  color:white; }
+
+

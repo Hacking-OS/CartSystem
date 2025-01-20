@@ -1,0 +1,11 @@
+table,
+tr,
+td,
+th{
+  /* font-size: 20px; */
+    /* border: 2px solid black; */
+    /* padding: 20px; */
+    text-align: center;
+}
+
+tr:hover {background-color: rgba(0,0,0,.075);}
