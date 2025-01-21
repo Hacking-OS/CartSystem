@@ -93,10 +93,8 @@ showmessage(showMessage:string):void {
     case "Info":
       this.alertService.showAlertPopup("Info!","Info Message",AlertType.Info);
       break;
-
-  const unsafeHtml = '<script>Alert("Hello World")</script> 4530643968';
-  this.safeHtmlContent = this.sanitizer.bypassSecurityTrustHtml(unsafeHtml);
-
 }
+const unsafeHtml = '<script>Alert("Hello World")</script> 4530643968';
+this.safeHtmlContent = this.sanitizer.bypassSecurityTrustHtml(unsafeHtml);
 }
 
