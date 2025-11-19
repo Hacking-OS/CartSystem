@@ -123,7 +123,7 @@ export class AutherizeInterceptor implements HttpInterceptor {
             this.isRefreshing = true;
             // Token refresh logic
             return this.getToken.refreshToken().pipe(
-              switchMap((response:AccessTokenResponse): Observable<HttpEvent<any>> => {
+              switchMap((response:any): Observable<HttpEvent<any>> => {
                 if (response && response.access_token) {
                   // Refresh successful, update the token and retry the request
                   localStorage.setItem('token', response.access_token);

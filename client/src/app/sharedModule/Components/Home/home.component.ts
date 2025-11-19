@@ -96,5 +96,5 @@ showmessage(showMessage:string):void {
 }
 const unsafeHtml = '<script>Alert("Hello World")</script> 4530643968';
 this.safeHtmlContent = this.sanitizer.bypassSecurityTrustHtml(unsafeHtml);
+ }
 }
-

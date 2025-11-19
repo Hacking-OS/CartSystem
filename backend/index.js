@@ -15,9 +15,9 @@ app.use(express.json());
 
 app.use(cors({
   origin: ['http://localhost:4200','http://localhost:8081'],
-  methods: 'GET,POST,DELETE,PATCH',
+  methods: 'GET,POST,DELETE,PATCH,PUT,OPTIONS',
   allowedHeaders: 'Authorization, Content-Type',
-  credentials: false, // Allow credentials (cookies, HTTP authentication)
+  credentials: true, // Allow credentials (cookies, HTTP authentication)
   optionsSuccessStatus: 204, // Respond to preflight requests with a 204 No Content status
 }));
 // create application/json parser
