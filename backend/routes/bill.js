@@ -22,12 +22,23 @@ router.post("/GenerateReport", authentication.authenticateToken, (req, res) => {
       query = "SELECT sum(user_cart.total_price) as Total,users.phone,users.name,users.email,user_cart.cartId as userCartID FROM product INNER JOIN category ON product.categoryId = category.id INNER JOIN user_cart ON product.id = user_cart.product_id and user_cart.userCheckOut=1 INNER JOIN users ON user_cart.user_id=users.id and users.id=?";
 
       myConnection.query(query, [orderDetails.id], (err, dataFinalTotal) => {
-        let recreateJson = () => {
-          let original = orderDetails.productInfo.result
-          original.push({
-            resultPriceTotal: orderDetails.productInfo.resultPriceTotal
+        const safeStringify = (obj) => {
+          const seen = new WeakSet();
+          return JSON.stringify(obj, function (key, value) {
+            if (typeof value === 'object' && value !== null) {
+              if (seen.has(value)) return; // drop circular reference
+              seen.add(value);
+            }
+            return value;
           });
-          return JSON.stringify(original);
+        };
+
+        let recreateJson = () => {
+          const original = Array.isArray(orderDetails.productInfo && orderDetails.productInfo.result) ? orderDetails.productInfo.result : [];
+          // create a shallow copy of items to avoid mutating the original input
+          const copy = original.map(item => (item && typeof item === 'object') ? Object.assign({}, item) : item);
+          copy.push({ resultPriceTotal: orderDetails.productInfo && orderDetails.productInfo.resultPriceTotal });
+          return safeStringify(copy);
         }
         if (dataFinalTotal[0].userCartID) {} else {
           return res.status(404).json({
