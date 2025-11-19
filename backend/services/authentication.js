@@ -1,5 +1,5 @@
-require('dotenv').config();
 const Jtoken = require('jsonwebtoken');
+const config = require('../config');
 
 function authenticateToken(req,res,next){
 const authHeader=req.headers['authorization'];
@@ -7,7 +7,7 @@ const token = authHeader && authHeader.split(" ")[1];
 if(token==null){
     return res.sendStatus(401);
 }
-Jtoken.verify(token,process.env.ACCESS_TOKEN,(error,response)=>{
+Jtoken.verify(token,config.jwt.accessSecret,(error,response)=>{
     if(error){
         return res.sendStatus(403);
     }

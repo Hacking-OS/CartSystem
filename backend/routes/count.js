@@ -2,16 +2,6 @@ const express = require("express");
 const myConnection = require("../connection");
 const router = express.Router();
 const authentication = require("../services/authentication");
-const checkRole = require("../services/checkRole");
-const ejs = require("ejs");
-const pdf = require("html-pdf");
-const fs = require("fs");
-const path = require("path");
-const uuid = require("uuid");
-const nodemailer = require("nodemailer");
-const {
-    json
-} = require("stream/consumers");
 
 
 router.get("/cart", authentication.authenticateToken, (req, res) => {

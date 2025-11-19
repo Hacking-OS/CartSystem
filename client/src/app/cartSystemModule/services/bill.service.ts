@@ -2,12 +2,10 @@ import { Injectable, Input, NgModule } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
-@NgModule({})
 
 @Injectable({
   providedIn: 'root'
 })
-
 export class BillService {
   constructor(private Http:HttpClient) {}
   getAllConsumerBill(Token:any){

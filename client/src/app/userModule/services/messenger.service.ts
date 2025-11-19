@@ -2,10 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, NgModule } from '@angular/core';
 import { environment } from '../../../environments/environment';
 
-@Injectable({
-  providedIn: 'root'
-})
-@NgModule({})
+@Injectable()
 export class MessengerService
  {
 

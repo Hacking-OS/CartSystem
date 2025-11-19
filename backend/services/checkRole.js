@@ -1,8 +1,8 @@
-require('dotenv').config();
+const config = require('../config');
 
 function CheckRole(req,res,next){
 
-if(res.locals.role==process.env.USER){
+if(res.locals.role==config.jwt.userRole){
     return res.sendStatus(401);
 }else{
     next()

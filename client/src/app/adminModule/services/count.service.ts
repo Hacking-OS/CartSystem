@@ -5,8 +5,6 @@ import { environment } from '../../../environments/environment';
 @Injectable({
   providedIn: 'root'
 })
-
-@NgModule({})
 export class CountService {
   constructor(private Http: HttpClient) {}
   billCount(Token:any){

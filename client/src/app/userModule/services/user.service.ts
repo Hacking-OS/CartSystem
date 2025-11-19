@@ -2,11 +2,7 @@ import { HttpClient,HttpHeaders } from '@angular/common/http';
 import { Injectable, NgModule } from '@angular/core';
 import { environment } from '../../../environments/environment';
 
-@NgModule({})
-
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class UserService {
   constructor(private Http: HttpClient) {}
   emailValidate(email: string): any {

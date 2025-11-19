@@ -4,13 +4,6 @@ import { environment } from '../../../environments/environment';
 @Injectable({
   providedIn: 'root'
 })
-
-@NgModule({
-  declarations: [],
-  imports: [],
-  exports: []
-})
-
 export class CartService {
   constructor(private Http:HttpClient) {}
 

@@ -1,6 +1,5 @@
 import { Injectable, NgModule } from '@angular/core';
-@NgModule({})
+@Injectable()
 export class CartEndPointService {
-
   constructor() { }
 }

@@ -1,8 +1,7 @@
 import { Component, Input, Renderer2 } from '@angular/core';
 import { Router } from '@angular/router';
-import { AppComponent } from '../../../app.component';
-import { SharedCoreService } from '../../sharedServices/shared-core.service';
 import { CspNonceService } from '../../sharedServices/security/cspnounce.service';
+import { SharedService } from '../../sharedServices/shared.service';
 
 
 @Component({
@@ -23,7 +22,7 @@ export class HeaderComponent {
   protected cspPolicy: string = "default-src 'self'; font-src 'self' https://fonts.gstatic.com";
 
   protected cspNonce: string | undefined;
-  constructor(private router: Router,private cspNonceService:CspNonceService,private countUser:SharedCoreService) {
+  constructor(private router: Router,private cspNonceService:CspNonceService,private countUser:SharedService) {
     if (
       localStorage.getItem('token') === undefined ||
       localStorage.getItem('token') === null ||

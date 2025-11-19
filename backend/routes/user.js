@@ -1,11 +1,11 @@
 const express = require('express');
 const myConnection = require("../connection");
 const Token = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
-require("dotenv").config();
 const router = express.Router();
 const authentication = require("../services/authentication");
 const CheckRole = require("../services/checkRole");
+const config = require("../config");
+const emailService = require("../services/emailService");
 
 router.post("/signup", (req, res) => {
     let user = req.body;
@@ -54,8 +54,8 @@ router.post("/login", (req, res) => {
                     role: results[0].role,
                     userId: results[0].id,
                 }
-                const AccessToken = Token.sign(response, process.env.ACCESS_TOKEN, {
-                  expiresIn: "0.01h",
+                const AccessToken = Token.sign(response, config.jwt.accessSecret, {
+                  expiresIn: config.jwt.accessTtl,
                 });
 
                const newRefreshToken =generateRefreshToken(response);
@@ -72,19 +72,6 @@ router.post("/login", (req, res) => {
 
 
 
-var transporter = nodemailer.createTransport({
-    ssl: {rejectUnauthorized: false},
-    tls: {rejectUnauthorized: false},
-    port:587,
-    service: "gmail",
-    auth: {
-        user:process.env.EMAIL,
-        pass:process.env.PASSWORD,
-    }
-});
-
-
-// ,
 router.post("/forgetPassword", (req, res) => {
 let user = req.body;
     // let user= req.body;
@@ -98,20 +85,25 @@ let user = req.body;
                     message: "Password sent Successfully to you email Address!(Not)"
                 });
             } else {
-                var mailingOptions = {
-                    from: process.env.EMAIL,
+                const mailingOptions = {
                     to: results[0].email,
-                    subject: "Password By DeveloperCodingPreview: ",
+                    subject: "Password By DeveloperCodingPreview:",
                     html: "<p><b>Your login details for developerCoding preview is :</b><br><b>your email : </b><b>" + results[0].email + "<br><b>your password:" + results[0].password + "</b><br><br> click <a href='http://localhost:4200'>here</a> to login</p>",
                 };
-                transporter.sendMail(mailingOptions, function (error, info) {
-                    if (error) {
+                emailService.sendMail(mailingOptions)
+                    .then((info) => {
+                        if (info.skipped) {
+                            console.log("Email disabled: password reminder skipped.");
+                        } else {
+                            console.log("email sent : " + info.response);
+                        }
+                        return res.status(200).json({message: "Password sent Successfully to you email Address!"});
+                    })
+                    .catch((error) => {
                         console.log(error);
-                    } else {
-                        console.log("email sent : " + info.response);
-                    }
-                });
-                return res.status(200).json({message: "Password sent Successfully to you email Address!"});
+                        return res.status(500).json({message: "Unable to send email right now."});
+                    });
+                return;
             }
         }
     });
@@ -135,8 +127,8 @@ router.get("/token", (req, res) => {
     email: res.locals.email,
     role: res.locals.role
 }
-const AccessToken = Token.sign(response, process.env.ACCESS_TOKEN, {
-  expiresIn: "0.5h",
+const AccessToken = Token.sign(response, config.jwt.accessSecret, {
+  expiresIn: config.jwt.accessTtl,
 });
 return res.status(200).json({response:AccessToken});
 });
@@ -146,7 +138,7 @@ router.get("/validToken/:token", (req, res) => {
   if(req.params.token==null){
     return res.status(401).json({response:false});
 }
-Token.verify(req.params.token,process.env.ACCESS_TOKEN,(error,response)=>{
+Token.verify(req.params.token,config.jwt.accessSecret,(error,response)=>{
     if(error){
         return res.status(403).json({response:false});
     }
@@ -223,7 +215,7 @@ router.get("/checkToken",authentication.authenticateToken, (req, res) => {
 router.post('/refresh-token', (req, res) => {
   const refreshToken = req.body.refreshToken;
   const token = req.body.token;
-  Token.verify(refreshToken,process.env.secretKey,(error,response)=>{
+  Token.verify(refreshToken,config.jwt.refreshSecret,(error,response)=>{
     const newAccessToken = generateAccessToken({email: res.locals.email,role: res.locals.role});
     if(error){
       return  res.status(401).json({ success: '' ,error: 'Invalid refresh token!' });
@@ -235,11 +227,11 @@ router.post('/refresh-token', (req, res) => {
 
 
 function generateAccessToken(payload) {
-  const accessToken = Token.sign(payload, process.env.ACCESS_TOKEN, { expiresIn: '0.01h' });
+  const accessToken = Token.sign(payload, config.jwt.accessSecret, { expiresIn: config.jwt.accessTtl });
   return {accessToken:accessToken};
 }
 function generateRefreshToken(payload) {
-  const refresh_Token = Token.sign(payload,process.env.secretKey, { expiresIn: '0.5h' });
+  const refresh_Token = Token.sign(payload,config.jwt.refreshSecret, { expiresIn: config.jwt.refreshTtl });
   return {refreshToken:refresh_Token};
 }
 

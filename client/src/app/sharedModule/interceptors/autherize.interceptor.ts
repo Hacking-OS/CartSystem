@@ -13,10 +13,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, finalize, switchMap, take } from 'rxjs/operators';
 import { RefreshtokenService } from './refreshtoken.service';
 import { Router } from '@angular/router';
-
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class AutherizeInterceptor implements HttpInterceptor {
   private isRefreshing = false;
 

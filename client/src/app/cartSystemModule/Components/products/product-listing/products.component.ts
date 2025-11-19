@@ -1,10 +1,9 @@
 import { Component, ElementRef, EventEmitter, Output, Renderer2, Signal, ViewChild, signal } from '@angular/core';
 import { FormBuilder, NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AppComponent } from '../../../../app.component';
 import { AlertService, AlertType } from '../../../../sharedModule/alertServices/alert.service';
-import { SharedCoreService } from '../../../../sharedModule/sharedServices/shared-core.service';
 import { ProductService } from '../../../services/product.service';
+import { SharedService } from '../../../../sharedModule/sharedServices/shared.service';
 
 @Component({
   selector: 'app-products',
@@ -44,7 +43,7 @@ userData={
 userRole= localStorage.getItem('role');
 
   constructor(private fBuilder: FormBuilder, private product:ProductService, private router: Router,
-    private getCount:SharedCoreService,
+    private getCount:SharedService,
     private alertService:AlertService,
     ) {
     this.getProducts();
@@ -82,13 +81,13 @@ onClickChange(){
       this.message=data.message;
       this.getProducts();
       setTimeout(()=>{
-        this.message=""||null;
+        this.message="";
         //
        },3000);
     },(error:any)=>{
       this.message=error;
       setTimeout(()=>{
-         this.message=""||null;
+         this.message="";
 
        },3000);
     });
@@ -136,7 +135,7 @@ openModal(CatUpdate:any,productName:any,productDescription:any,productPrice:any,
       this.message=error.error.message;
      });
      setTimeout(()=>{
-       this.message=""||null;
+       this.message="";
 
      },3000);
   }
@@ -149,7 +148,7 @@ openModal(CatUpdate:any,productName:any,productDescription:any,productPrice:any,
     this.message=error.error.message;
    });
    setTimeout(()=>{
-     this.message=""||null;
+     this.message="";
 
    },3000);
   }
@@ -163,7 +162,7 @@ openModal(CatUpdate:any,productName:any,productDescription:any,productPrice:any,
    });
    formData.reset();
    setTimeout(()=>{
-     this.message=""||null;
+     this.message="";
    },3000);
   }
 
@@ -176,7 +175,7 @@ openModal(CatUpdate:any,productName:any,productDescription:any,productPrice:any,
     this.getCount.scrollToNav();
    });
    setTimeout(()=>{
-     this.message=""||null;
+     this.message="";
    },3000);
   }
 

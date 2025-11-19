@@ -1,8 +1,5 @@
 const express = require('express');
 const myConnection = require("../connection");
-const Token = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
-require("dotenv").config();
 const router = express.Router();
 const authentication = require("../services/authentication");
 const CheckRole = require("../services/checkRole");

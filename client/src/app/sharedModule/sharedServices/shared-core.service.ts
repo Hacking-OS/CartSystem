@@ -1,15 +1,9 @@
-import { Injectable, NgModule, Renderer2 } from '@angular/core';
+
 import { Router } from '@angular/router';
-
-import { AppComponent } from '../../app.component';
-
 import { AlertService, AlertType } from '../alertServices/alert.service';
 import { CspNonceService } from './security/cspnounce.service';
 import { CountService } from '../../adminModule/services/count.service';
-
-@Injectable({
-  providedIn: 'root',
-})
+import { forkJoin, Observable, tap } from 'rxjs';
 
 export class SharedCoreService {
   user = 0;
@@ -24,24 +18,25 @@ export class SharedCoreService {
   // ,private renderer:Renderer2
   constructor(private router: Router,private count:CountService,private cspNonceService:CspNonceService,private alert:AlertService) {}
 
-  public getUserCount(){
-    this.count.billCount(localStorage.getItem('token')).subscribe(count => {
-      this.responseCountBill=count;
-    });
-    this.count.cartCount(localStorage.getItem('token')).subscribe(count => {
-      this.responseCountCart=count;
-    });
-    this.count.checkOutCount(localStorage.getItem('token')).subscribe(count => {
-      this.responseCountCheckout=count;
-    });
-    if (localStorage.getItem('role') === 'admin') {
-      this.isUserAdmin = 1;
-      // this.appLoader.isLoading=true;
-      this.count.AdminTotalCountBill(localStorage.getItem('token')).subscribe(count => {
-        this.responseCountBill=count;
-        // this.appLoader.isLoading=false;
-      });
-    }
+  public getUserCount() :Observable<Record<string, any>> {
+    // requires: import { forkJoin } from 'rxjs'; import { tap } from 'rxjs/operators';
+    const token = localStorage.getItem('token');
+    const bill$ = (localStorage.getItem('role') === 'admin')
+      ? this.count.AdminTotalCountBill(token)
+      : this.count.billCount(token);
+    const cart$ = this.count.cartCount(token);
+    const checkout$ = this.count.checkOutCount(token);
+
+    return forkJoin([bill$, cart$, checkout$]).pipe(
+      tap(([bill, cart, checkout]) => {
+        this.responseCountBill = bill;
+        this.responseCountCart = cart;
+        this.responseCountCheckout = checkout;
+        if (localStorage.getItem('role') === 'admin') {
+          this.isUserAdmin = 1;
+        }
+      })
+    );
   }
 
   logoutUser(){

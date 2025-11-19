@@ -1,12 +1,14 @@
-require('dotenv').config();
 const http = require("http");
 const app =require("./index");
+const config = require("./config");
 const server = http.createServer(app);
-const port = process.env.PORT;
-const os = require("node:os");
 const enviroment = require("../client/src/environments/enviroment");
-const ip=enviroment.baseUrl;
-console.log(port,ip);
-server.listen(port,ip, () => {
-    console.log(`The server is running on http://${ip}:${port}`);
+
+const host = config.app.host || enviroment.baseUrl || "0.0.0.0";
+const port = config.app.port;
+
+console.log(`Attempting to start server on ${host}:${port}`);
+
+server.listen(port, host, () => {
+    console.log(`The server is running on http://${host}:${port}`);
 });

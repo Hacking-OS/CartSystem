@@ -16,12 +16,7 @@ import { AuthUserGuard } from './sharedModule/guards/auth-user.guard';
 import { UserFoundGuard } from './sharedModule/guards/user-found.guard';
 import { UserNotFoundGuard } from './sharedModule/guards/user-not-found.guard';
 import { CspNonceService } from './sharedModule/sharedServices/security/cspnounce.service';
-import { adminModule } from './adminModule/admin.module';
-import { cartModule } from './cartSystemModule/cart.module';
-import { UserModule } from './userModule/user.module';
-import { CountService } from './adminModule/services/count.service';
-import { SharedCoreService } from './sharedModule/sharedServices/shared-core.service';
-import { SharedService } from './sharedModule/sharedServices/shared.service';
+import { AutherizeInterceptor } from './sharedModule/interceptors/autherize.interceptor';
 
 
 
@@ -47,19 +42,13 @@ import { SharedService } from './sharedModule/sharedServices/shared.service';
       preventDuplicates: true, // Prevent duplicate toasts
     }),
     AlertService,
-    CountService,
     CspNonceService,
-    UserModule,
-    cartModule,
-    adminModule,
   ],
   providers: [
     AuthUserGuard,
     UserNotFoundGuard,
     UserFoundGuard,
-    SharedCoreService,
-    SharedService,
-    // { provide: HTTP_INTERCEPTORS, useClass: AutherizeInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: AutherizeInterceptor, multi: true },
   ],
   bootstrap: [AppComponent],
 })

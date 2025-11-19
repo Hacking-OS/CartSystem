@@ -3,15 +3,35 @@ const myConnection = require("../connection");
 const router = express.Router();
 const authentication = require("../services/authentication");
 const checkRole = require("../services/checkRole");
-const ejs = require("ejs");
-const pdf = require("html-pdf");
 const fs = require("fs");
-const path = require("path");
 const uuid = require("uuid");
-const nodemailer = require("nodemailer");
-const {
-  json
-} = require("stream/consumers");
+const pdfService = require("../services/pdfService");
+const emailService = require("../services/emailService");
+
+const buildTemplatePayload = (productDetails, meta) => ({
+  productDetails,
+  name: meta.name,
+  email: meta.email,
+  phone: meta.phone,
+  PaymentType: meta.paymentType,
+  totalAmount: meta.total,
+});
+
+const extractProductData = (serializedProductData) => {
+  let totalAmount = 0;
+  const parsed = JSON.parse(serializedProductData || "[]");
+  const filteredData = parsed.filter((item) => {
+    if (item && Object.prototype.hasOwnProperty.call(item, "resultPriceTotal")) {
+      totalAmount = item.resultPriceTotal;
+      return false;
+    }
+    return true;
+  });
+  return {
+    filteredData,
+    totalAmount,
+  };
+};
 
 router.post("/GenerateReport", authentication.authenticateToken, (req, res) => {
       let GernerateId = uuid.v1();
@@ -57,110 +77,83 @@ router.post("/GenerateReport", authentication.authenticateToken, (req, res) => {
 
             query = "SELECT user_cart.cartId,user_cart.user_id,user_cart.total_price as totalAmount,user_cart.quantity,product.id,product.name,product.price,product.description,product.categoryId,category.name as category,product.status FROM product INNER JOIN category ON product.categoryId = category.id INNER JOIN user_cart ON product.id = user_cart.product_id and user_cart.userCheckOut=1 and user_cart.user_id=?";
 
-            myConnection.query(query, [orderDetails.id], (errs, productData) => {
+            myConnection.query(query, [orderDetails.id], async (errs, productData) => {
 
               if (errs) {
-                return res.status(500).json(err);
+                return res.status(500).json(errs);
               }
 
-              ejs.renderFile(path.join(__dirname, '', "report.ejs"), {
-                productDetails: productData,
-                name: dataFinalTotal[0].name,
-                email: dataFinalTotal[0].email,
-                phone: dataFinalTotal[0].phone,
-                PaymentType: orderDetails.paymentType,
-                totalAmount: dataFinalTotal[0].Total
-              }, (err, results) => {
-                if (err) {
-                  return res.status(500).json(err);
-                } else {
-                  pdf.create(results).toFile("./Generatedpdf/" + GernerateId + ".pdf", (err, data) => {
-                    if (err) {
-                      console.log(err);
-                      return res.status(500).json(err);
-                    } else {
-                      var pdfAttach = fs.readFileSync('./Generatedpdf/' + GernerateId + '.pdf');
-                      const transporter = nodemailer.createTransport({
-                        ssl: {
-                          rejectUnauthorized: false,
-                        },
-                        tls: {
-                          rejectUnauthorized: false,
-                        },
-                        port: 587,
-                        service: "gmail",
-                        auth: {
-                          user: "YourEmail", // generated ethereal user
-                          pass: "YourPassword", // generated ethereal password
-                        },
+              try {
+                const pdfPath = await pdfService.generateInvoice(
+                  GernerateId,
+                  buildTemplatePayload(productData, {
+                    name: dataFinalTotal[0].name,
+                    email: dataFinalTotal[0].email,
+                    phone: dataFinalTotal[0].phone,
+                    paymentType: orderDetails.paymentType,
+                    total: dataFinalTotal[0].Total,
+                  })
+                );
+
+                query = "UPDATE user_cart SET userCheckOut=? where user_id=? and userCheckOut=?";
+                myConnection.query(query, [2, orderDetails.id, 1], (err, results) => {
+                  if (err) {
+                    return res.status(500).json(err);
+                  } else if (results.affectedRows == 0) {
+                    return res.status(404).json({
+                      message: "Invalid Data provided!"
+                    });
+                  }
+
+                  const mailingOptions = {
+                    to: dataFinalTotal[0].email,
+                    subject: "Order Payment:",
+                    html: "Thank you for shopping with us.",
+                    attachments: [{
+                      filename: GernerateId + '.pdf',
+                      path: pdfPath
+                    }],
+                  };
+
+                  const logEmailResult = (status, info) => {
+                    query = "INSERT INTO emailSent (emailResults,log) VALUES (?,?)";
+                    myConnection.query(query, [status, JSON.stringify(info)], () => {});
+                  };
+
+                  if (emailService.isEmailEnabled()) {
+                    emailService.sendMail(mailingOptions)
+                      .then((info) => {
+                        const responseMessage = info.response || "Email dispatched";
+                        logEmailResult(responseMessage, info);
+                        console.log(`email sent : ${responseMessage}`);
+                      })
+                      .catch((error) => {
+                        console.log(error);
+                        logEmailResult(error.message, { error });
                       });
+                  } else {
+                    logEmailResult("Email skipped", { reason: "Email disabled in demo build." });
+                  }
 
-                      const mailingOptions = {
-                        from: "SendingFromEmail", // sender address
-                        to: "SendingToEmail", // list of receivers
-                        subject: "Order Payment:", // Subject line
-                        html: "thank U For Shopping with us ", // html body
-                        attachments: [{
-                          filename: GernerateId + '.pdf',
-                          // path: __dirname + '../Generatedpdf/'+GernerateId+'.pdf'
-                          path: './Generatedpdf/' + GernerateId + '.pdf'
-                        }],
-                      };
-
-                      query = "UPDATE user_cart SET userCheckOut=? where user_id=? and userCheckOut=?";
-                      myConnection.query(query, [2, orderDetails.id, 1], (err, results) => {
-                        if (err) {
-                          return res.status(500).json(err);
-                        } else {
-                          if (results.affectedRows == 0) {
-                            return res.status(404).json({
-                              message: "Invalid Data provided!"
-                            });
-                          }
-                        }
-
-                        transporter.sendMail(mailingOptions, (error, info) => {
-                          if (error) {
-                            console.log(error);
-                            query = "INSERT INTO emailSent (emailResults,log) VALUES (?,?)";
-                            myConnection.query(query, [error.message,JSON.stringify(info)], (err, results) => {
-                              if (err) {
-                                return res.status(500).json(err);
-                              } else {}
-                            });
-                          } else {
-                            query = "INSERT INTO emailSent (emailResults,log) VALUES (?,?)";
-                            myConnection.query(query, [info.response,JSON.stringify(info)], (err, results) => {
-                              if (err) {
-                                return res.status(500).json(err);
-                              } else {}
-                            });
-                            console.log(`email sent : ${info.response}`);
-                          }
-                        });
-                        query = "DELETE FROM user_cart WHERE user_id = ? AND userCheckOut = ?;";
-                        myConnection.query(query, [orderDetails.id, 2], (err, results) => {
-                          if (err) {
-                            return res.status(500).json(err);
-                          } else {
-                            if (results.affectedRows == 0) {
-                              return res.status(404).json({
-                                message: "Invalid Data provided!"
-                              });
-                            } else {
-                              return res.status(200).json({
-                                uuid: GernerateId,
-                                message: "Thank U for Shoping with US "
-                              });
-                            }
-                          }
-                        });
-          
+                  query = "DELETE FROM user_cart WHERE user_id = ? AND userCheckOut = ?;";
+                  myConnection.query(query, [orderDetails.id, 2], (err, results) => {
+                    if (err) {
+                      return res.status(500).json(err);
+                    } else if (results.affectedRows == 0) {
+                      return res.status(404).json({
+                        message: "Invalid Data provided!"
                       });
                     }
+                    return res.status(200).json({
+                      uuid: GernerateId,
+                      message: "Thank U for Shoping with US "
+                    });
                   });
-                }
-              });
+                });
+              } catch (error) {
+                console.log(error);
+                return res.status(500).json(error);
+              }
             });
           }
         });
@@ -173,8 +166,7 @@ router.post("/GenerateReport", authentication.authenticateToken, (req, res) => {
       router.post("/getPdf", authentication.authenticateToken, (req, res) => {
 
         const orderDetails = req.body;
-        // return res.status(500).json(orderDetails.id);
-        const pdfPath = "./Generatedpdf/" + orderDetails.id + ".pdf";
+        const pdfPath = pdfService.getPdfPath(orderDetails.id);
         if (fs.existsSync(pdfPath)) {
           res.contentType("application/pdf");
           fs.createReadStream(pdfPath).pipe(res);
@@ -183,103 +175,78 @@ router.post("/GenerateReport", authentication.authenticateToken, (req, res) => {
     
           if (orderDetails.role === 'user') {
             query = "select * from bill INNER JOIN users ON bill.userId=users.id and users.id=? and bill.uuid=?;";
-            myConnection.query(query, [orderDetails.userId, orderDetails.id], (err, dataFinalTotal) => {
-              let resultPriceTotalObject;
-              let filteredData = JSON.parse(dataFinalTotal[0].productData).filter(item => {
-                if ("resultPriceTotal" in item) {
-                  resultPriceTotalObject = {
-                    resultPriceTotal: item.resultPriceTotal
-                  };
-                  return false;
-                }
-                return true;
-              });
+            myConnection.query(query, [orderDetails.userId, orderDetails.id], async (err, dataFinalTotal) => {
+              if (err) {
+                return res.status(500).json(err);
+              }
+              if (!dataFinalTotal.length) {
+                return res.status(404).json({ message: "Bill not found" });
+              }
 
-              // const filteredData = JSON.parse(dataFinalTotal[0].productData).filter(item => !("resultPriceTotal" in item));
-              ejs.renderFile(path.join(__dirname, '', "report.ejs"), {
-                productDetails: filteredData,
-                name: dataFinalTotal[0].name,
-                email: dataFinalTotal[0].email,
-                phone: dataFinalTotal[0].phone,
-                PaymentType: dataFinalTotal[0].paymentMethod,
-                totalAmount: resultPriceTotalObject.resultPriceTotal
-              }, (err, results) => {
-                if (err) {
-                  console.log(err);
-                  return res.status(500).json(err);
-                } else {
-                  pdf.create(results).toFile(pdfPath, (err, data) => {
-                    if (err) {
-                      console.log(err);
-                      return res.status(500).json(err);
-                    } else {
-                      let timeSet = {
-                        modifiedDate: new Date(Date.now()),
-                        PDFGeneratedTimes:dataFinalTotal[0].PDFGeneratedTimes + 1
-                      }
-                      query = "UPDATE bill SET ? WHERE bill.uuid = ?";
-                      myConnection.query(query, [timeSet, orderDetails.id], (errorsForBill, modifyingBill) => {
-                        if (errorsForBill) {
-                          return res.status(500).json(errorsForBill);
-                        }
-                      });
-                      res.contentType("application/pdf");
-                      fs.createReadStream(pdfPath).pipe(res);
-                    }
-                  });
+              const { filteredData, totalAmount } = extractProductData(dataFinalTotal[0].productData);
+              try {
+                await pdfService.generateInvoice(orderDetails.id, buildTemplatePayload(filteredData, {
+                  name: dataFinalTotal[0].name,
+                  email: dataFinalTotal[0].email,
+                  phone: dataFinalTotal[0].phone,
+                  paymentType: dataFinalTotal[0].paymentMethod,
+                  total: totalAmount,
+                }));
+                let timeSet = {
+                  modifiedDate: new Date(Date.now()),
+                  PDFGeneratedTimes:dataFinalTotal[0].PDFGeneratedTimes + 1
                 }
-              });
+                query = "UPDATE bill SET ? WHERE bill.uuid = ?";
+                myConnection.query(query, [timeSet, orderDetails.id], (errorsForBill) => {
+                  if (errorsForBill) {
+                    return res.status(500).json(errorsForBill);
+                  }
+                  res.contentType("application/pdf");
+                  fs.createReadStream(pdfPath).pipe(res);
+                });
+              } catch (error) {
+                console.log(error);
+                return res.status(500).json(error);
+              }
             });
 
           } else {
 
             query = "select * from bill where bill.uuid=?;";
-            myConnection.query(query, [orderDetails.id], (err, responseForAdmin) => {
-              let resultPriceTotalObject;
-              let filteredData = JSON.parse(responseForAdmin[0].productData).filter(item => {
-                if ("resultPriceTotal" in item) {
-                  resultPriceTotalObject = {
-                    resultPriceTotal: item.resultPriceTotal
-                  };
-                  return false;
-                }
-                return true;
-              });
+            myConnection.query(query, [orderDetails.id], async (err, responseForAdmin) => {
+              if (err) {
+                return res.status(500).json(err);
+              }
+              if (!responseForAdmin.length) {
+                return res.status(404).json({ message: "Bill not found" });
+              }
 
-              // const filteredData = JSON.parse(dataFinalTotal[0].productData).filter(item => !("resultPriceTotal" in item));
-              ejs.renderFile(path.join(__dirname, '', "report.ejs"), {
-                productDetails: filteredData,
-                name: responseForAdmin[0].name,
-                email: responseForAdmin[0].email,
-                phone: responseForAdmin[0].phone,
-                PaymentType: responseForAdmin[0].paymentMethod,
-                totalAmount: resultPriceTotalObject.resultPriceTotal
-              }, (err, results) => {
-                if (err) {
-                  console.log(err);
-                  return res.status(500).json(err);
-                } else {
-                  pdf.create(results).toFile(pdfPath, (err, data) => {
-                    if (err) {
-                      console.log(err);
-                      return res.status(500).json(err);
-                    } else {
-                      let timeSet = {
-                        modifiedDate: new Date(Date.now()),
-                        PDFGeneratedTimes:responseForAdmin[0].PDFGeneratedTimes + 1
-                      }  
-                      query = "UPDATE bill SET ? WHERE bill.uuid = ?";
-                      myConnection.query(query, [timeSet, orderDetails.id], (errorsForBill, modifyingBill) => {
-                        if (errorsForBill) {
-                          return res.status(500).json(errorsForBill);
-                        }
-                      });
-                      res.contentType("application/pdf");
-                      fs.createReadStream(pdfPath).pipe(res);
-                    }
-                  });
-                }
-              });
+              const { filteredData, totalAmount } = extractProductData(responseForAdmin[0].productData);
+
+              try {
+                await pdfService.generateInvoice(orderDetails.id, buildTemplatePayload(filteredData, {
+                  name: responseForAdmin[0].name,
+                  email: responseForAdmin[0].email,
+                  phone: responseForAdmin[0].phone,
+                  paymentType: responseForAdmin[0].paymentMethod,
+                  total: totalAmount,
+                }));
+                let timeSet = {
+                  modifiedDate: new Date(Date.now()),
+                  PDFGeneratedTimes:responseForAdmin[0].PDFGeneratedTimes + 1
+                }  
+                query = "UPDATE bill SET ? WHERE bill.uuid = ?";
+                myConnection.query(query, [timeSet, orderDetails.id], (errorsForBill) => {
+                  if (errorsForBill) {
+                    return res.status(500).json(errorsForBill);
+                  }
+                  res.contentType("application/pdf");
+                  fs.createReadStream(pdfPath).pipe(res);
+                });
+              } catch (error) {
+                console.log(error);
+                return res.status(500).json(error);
+              }
             });
           }
         }

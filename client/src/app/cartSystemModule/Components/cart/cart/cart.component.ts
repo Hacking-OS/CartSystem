@@ -4,8 +4,8 @@ import { switchMap, timer } from 'rxjs';
 import { NavigationEnd, Router } from '@angular/router';
 import { AppComponent } from '../../../../app.component';
 import { AlertService, AlertType } from '../../../../sharedModule/alertServices/alert.service';
-import { SharedCoreService } from '../../../../sharedModule/sharedServices/shared-core.service';
 import { CartService } from '../../../services/cart.service';
+import { SharedService } from '../../../../sharedModule/sharedServices/shared.service';
 
 
 
@@ -25,7 +25,7 @@ export class CartComponent{
   userCartData2: any | undefined
   mySubscription:any;
   constructor(private UserCart: CartService, Http: HttpClient,private router:Router,
-    private getCount:SharedCoreService,
+    private getCount:SharedService,
     private alertService:AlertService,
     ) {
     this.getUserCart();
@@ -47,7 +47,7 @@ export class CartComponent{
       },
     )
     setTimeout(() => {
-      this.message = '' || null
+      this.message="";
       // window.location.reload()
     }, 3000)
   }
@@ -69,7 +69,7 @@ export class CartComponent{
     );
 
     setTimeout(() => {
-      this.message = '' || null
+      this.message="";
       // window.location.reload()
     }, 3000);
   }
@@ -94,7 +94,7 @@ export class CartComponent{
     );
 
   setTimeout(() => {
-    this.message = '' || null
+    this.message="";
   }, 3000);
   }
 

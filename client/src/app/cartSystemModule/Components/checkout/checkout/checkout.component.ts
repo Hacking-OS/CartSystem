@@ -2,12 +2,12 @@ import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormBuilder } from '@angular/forms';
 import { AppComponent } from '../../../../app.component';
-import { SharedCoreService } from '../../../../sharedModule/sharedServices/shared-core.service';
 import {
   AlertService,
   AlertType,
 } from '../../../../sharedModule/alertServices/alert.service';
 import { CheckoutService } from '../../../services/checkout.service';
+import { SharedService } from '../../../../sharedModule/sharedServices/shared.service';
 
 @Component({
   selector: 'app-checkout',
@@ -30,7 +30,7 @@ export class CheckoutComponent {
     private checkout: CheckoutService,
     private alert: AlertService,
     Http: HttpClient,
-    private getCount: SharedCoreService,
+    private getCount: SharedService,
     private appLoader: AppComponent
   ) {
     this.getCheckoutData();

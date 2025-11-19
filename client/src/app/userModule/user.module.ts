@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FeatureModule } from '../sharedModule/features/feature.module';
-import { AutherizeInterceptor } from '../sharedModule/interceptors/autherize.interceptor';
+// import { AutherizeInterceptor } from '../sharedModule/interceptors/autherize.interceptor';
 import { MainModule } from '../sharedModule/main.module';
 import { ForgetpasswordComponent } from './Components/Forgot-password/forgetpassword.component';
 import { LoginComponent } from './Components/Login/login.component';
@@ -17,8 +17,6 @@ import { HomeComponent } from '../sharedModule/Components/Home/home.component';
 import { LoginService } from './HttpServices/login.service';
 import { MessengerService } from './services/messenger.service';
 import { UserService } from './services/user.service';
-import { SharedCoreService } from '../sharedModule/sharedServices/shared-core.service';
-import { SharedService } from '../sharedModule/sharedServices/shared.service';
 
 
 
@@ -32,14 +30,13 @@ import { SharedService } from '../sharedModule/sharedServices/shared.service';
     ReactiveFormsModule,
     userRoutingModule,
     HttpClientModule,
-    UserService,
-    MessengerService,
-    LoginService,
-    MainModule,
-    FeatureModule,
+    MainModule
   ],
  providers:[
-  { provide: HTTP_INTERCEPTORS, useClass: AutherizeInterceptor, multi: true },
+  MessengerService,
+  LoginService,
+  UserService,
+  // { provide: HTTP_INTERCEPTORS, useClass: AutherizeInterceptor, multi: true },
  ]
 })
 export class UserModule {}

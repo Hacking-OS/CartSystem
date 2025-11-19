@@ -1,8 +1,8 @@
-import { Injectable, NgModule } from '@angular/core';
+import { inject, Injectable, NgModule } from '@angular/core';
+import { AdminEndPointService } from './admin-end-point.service';
 
-@NgModule({})
-
+@Injectable()
 export class AdminService {
-
+  private AdminEndPointService:AdminEndPointService = inject(AdminEndPointService);
   constructor() { }
 }

@@ -1,5 +1,5 @@
 import { Injectable, NgModule } from '@angular/core';
-@NgModule({})
+@Injectable()
 export class LoginEndPointService {
 
   constructor() { }

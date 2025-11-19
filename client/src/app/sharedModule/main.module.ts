@@ -12,26 +12,44 @@ import { FooterComponent } from './Components/footer/footer.component';
 import { HeaderComponent } from './Components/header/header.component';
 import { PageComponent } from './Components/page/page.component';
 import { SidebarComponent } from './Components/sidebar/sidebar.component';
-import { AutherizeInterceptor } from './interceptors/autherize.interceptor';
-import { SharedCoreService } from './sharedServices/shared-core.service';
-import { SharedService } from './sharedServices/shared.service';
-import { BrowserModule } from '@angular/platform-browser';
 import { MainService } from './HttpServices/main.service';
-
+import { TestingService } from './sharedServices/testing.service';
+import { UtilitiesService } from './sharedServices/utilities.service';
+import { FeatureModule } from './features/feature.module';
 
 @NgModule({
-  declarations: [HomeComponent,HeaderComponent, FooterComponent,ErrorComponent,PageComponent,SidebarComponent],
+  declarations: [
+    HomeComponent,
+    HeaderComponent,
+    FooterComponent,
+    ErrorComponent,
+    PageComponent,
+    SidebarComponent,
+  ],
   imports: [
     MainRoutingModule,
     HttpClientModule,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MainService,
+    FeatureModule,
   ],
- providers:[
-  { provide: HTTP_INTERCEPTORS, useClass: AutherizeInterceptor, multi: true },
- ],
- exports:[HomeComponent,HeaderComponent, FooterComponent,ErrorComponent,PageComponent,SidebarComponent]
+  providers: [
+    MainService,
+    UtilitiesService,
+    TestingService,
+    // { provide: HTTP_INTERCEPTORS, useClass: AutherizeInterceptor, multi: true },
+  ],
+  exports: [
+    HomeComponent,
+    HeaderComponent,
+    FooterComponent,
+    ErrorComponent,
+    PageComponent,
+    SidebarComponent,
+
+    //Using FeatureModule components globally by using MainModule
+    FeatureModule,
+  ],
 })
 export class MainModule {}

@@ -38,7 +38,7 @@ export class BillComponent {
                 this.message=error.error.message;
                });
                setTimeout(()=>{
-                 this.message=""||null;
+                 this.message="";
 
                },3000);
     }
@@ -51,7 +51,7 @@ export class BillComponent {
                 this.message=error.error.message;
                });
                setTimeout(()=>{
-                 this.message=""||null;
+                 this.message="";
 
                },3000);
     }
