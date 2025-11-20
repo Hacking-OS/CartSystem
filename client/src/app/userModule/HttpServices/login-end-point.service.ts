@@ -1,6 +1,7 @@
-import { Injectable, NgModule } from '@angular/core';
-@Injectable()
-export class LoginEndPointService {
+import { HttpClient } from "@angular/common/http";
+import { Router } from "@angular/router";
+import { SharedService } from "../../sharedModule/sharedServices/shared.service";
 
-  constructor() { }
+export class LoginEndPointService {
+  constructor(private http: HttpClient,private router: Router, private sharedService:SharedService) { }
 }
