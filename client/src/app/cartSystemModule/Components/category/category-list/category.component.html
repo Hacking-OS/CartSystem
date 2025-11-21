@@ -1,70 +1,86 @@
-<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"> -->
-<!-- <p>category works!</p> -->
 <app-header></app-header>
-<div id='message'  *ngIf="this.message!=null"
-    style="color:white;background-color:red;border-radius:25px;text-align:center;padding:20px;">{{ this.message }}</div>
-<form [hidden]="this.userRole==='user'" #myForm='ngForm' (ngSubmit)="postData(myForm)">
 
-    <input class="form-control" type="text" #email="ngModel" name="catname" [(ngModel)]="userData.catname"
-        placeholder="Enter Category name: " required minlength="4">
-    <div *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="alert alert-danger" role="alert">
-        <div *ngIf="email?.errors?.['required']">Name is required. </div>
-        <div *ngIf="email?.errors?.['minlength']">Name must be greater than < 3. </div>
-        </div>
-        <br> <br>
+<section class="app-shell">
+  <div class="app-section__header">
+    <p class="app-section__subtitle">Catalog configuration</p>
+    <h2 class="app-section__title">Manage product categories</h2>
+  </div>
 
-        <button type="submit" name="submit" [disabled]="myForm.invalid">submit</button>
-</form>
+  <div class="app-alert app-alert--danger" *ngIf="message">
+    {{ message }}
+  </div>
 
-<br>
-<br>
-<br>
-<br>
-<br>
+  <article class="app-card" *ngIf="userRole !== 'user'">
+    <h3>Add category</h3>
+    <form #myForm="ngForm" (ngSubmit)="postData(myForm)">
+      <input
+        class="form-control"
+        type="text"
+        #catName="ngModel"
+        name="catname"
+        [(ngModel)]="userData.catname"
+        placeholder="Category name"
+        required
+        minlength="3">
+      <div class="app-card__actions">
+        <button class="app-btn" type="submit" [disabled]="myForm.invalid">Create</button>
+      </div>
+    </form>
+  </article>
 
-<table class="table table-bordered table-hover table-dark">
-    <tr>
-        <th>ID</th>
-        <th>CategoryName</th>
-        <th [hidden]="this.userRole==='user'">update</th>
-    </tr>
-
-    <tr *ngFor="let person of this.usersDataFromDatabase ">
-        <!-- {{(person.status == 1) ? 'true' : 'false' }} -->
-        <td>{{ person.id }}</td>
-        <td> {{ person.name }}</td>
-
-        <td [hidden]="this.userRole==='user'"><button  type="button" class="btn btn-info btn-lg" (click)="openModal(person.id,person.name)">UPDATE</button></td>
-      </tr>
+  <div class="app-table-wrapper">
+    <table class="app-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Category</th>
+          <th [hidden]="userRole==='user'">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let person of usersDataFromDatabase">
+          <td>{{ person.id }}</td>
+          <td>{{ person.name }}</td>
+          <td [hidden]="userRole==='user'">
+            <button class="app-btn app-btn--ghost" type="button" (click)="openModal(person.id,person.name)">
+              Update
+            </button>
+          </td>
+        </tr>
+      </tbody>
     </table>
+  </div>
 
-        <div class="modal" tabindex="-1" role="dialog"  [ngStyle]="{'display':display}">
-             <div class="modal-dialog" role="document">
-                   <div class="modal-content">
-                         <div class="modal-header">
-                               <h4 class="modal-title"><div *ngIf="this.message!=null"
-                                style="color:white;background-color:green;border-radius:25px;text-align:center;padding:20px;">{{ this.message }}</div></h4>
-                               <button type="button" class="close" aria-label="Close" (click)="onCloseHandled()"><span aria-hidden="true">&times;</span></button>
-                             </div>
-                    <div class="modal-body">
-                        <form #myForm='ngForm' (ngSubmit)="UpdateCategory(this.getCatId,myForm)">
-                            <input class="form-control" type="text" #catnamenew="ngModel" name="catnamenew" [(ngModel)]="userData.catnamenew"
-                                placeholder="{{ this.userData.CurrentCatName }}" required minlength="4">
-                            <div *ngIf="catnamenew?.invalid && (catnamenew?.dirty || catnamenew?.touched)" class="alert alert-danger" role="alert">
-                                <div *ngIf="catnamenew?.errors?.['required']">Name is required. </div>
-                                <div *ngIf="catnamenew?.errors?.['minlength']">Name must be greater than < 3. </div>
-                                </div>
-                                <br> <br>
-
-                                <button type="submit" name="submit" [disabled]="myForm.invalid">submit</button>
-                        </form>
-                               <p>{{ this.getCatId }}</p>
-                             </div>
-                         <div class="modal-footer">
-                               <button type="button" class="btn btn-default" (click)="onCloseHandled()" >Close</button>
-                        </div>
-                </div>
-          </div>
-     </div>
-        <!-- <button style="color:blue;cursor:pointer" (click)="UpdateCategory(person.id)">forget password?</button> -->
+  <div class="modal" tabindex="-1" role="dialog" [ngStyle]="{'display':display}">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Update category</h4>
+          <button type="button" class="close" aria-label="Close" (click)="onCloseHandled()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form #myForm="ngForm" (ngSubmit)="UpdateCategory(getCatId,myForm)">
+            <input
+              class="form-control"
+              type="text"
+              #catnamenew="ngModel"
+              name="catnamenew"
+              [(ngModel)]="userData.catnamenew"
+              [placeholder]="userData.CurrentCatName"
+              required
+              minlength="3">
+            <div class="app-card__actions">
+              <button class="app-btn" type="submit" [disabled]="myForm.invalid">Save</button>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="app-btn app-btn--ghost" (click)="onCloseHandled()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 

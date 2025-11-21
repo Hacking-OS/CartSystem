@@ -1,53 +1,167 @@
-<!-- <p>messenger works!</p> -->
-<!-- {{  showMessages | json }} -->
 <app-header></app-header>
-<div class="container">
-  <div class="message-popup">
-  <div *ngFor="let message of showMessages">
-    <!-- <h3>{{ message.userName }}</h3>
-      <p>{{ message.userMessage }}</p> -->
-      <!-- <img src="/w3images/bandmember.jpg" alt="Avatar" style="width:100%;"> -->
-      <div [ngClass]="{'float-left':message.userID!==userId,'float-right':message.userID===userId}">
-        <div class="message">
-          <h3>{{ message.userName }}</h3>
-          <p>{{ message.userMessage }}</p>
-          <span class="time-right"><h3>{{ message.messagedAt|date:"yyyy-MM-dd HH:mm:ss" }}</h3></span>
-          <a class="text-primary" [hidden]="message.userID!==userId" (click)="deleteMessage(message.uuid_User)">Delete</a>
-          <!-- {{ (message.userID) === userId }} -->
+
+<section class="messenger-layout app-shell">
+  <aside class="messenger-sidebar">
+    <article class="app-card messenger-sidebar__panel">
+      <div class="messenger-sidebar__header">
+        <div>
+          <p class="app-section__subtitle">Chat Groups</p>
+          <h2 class="app-section__title">Your spaces</h2>
         </div>
       </div>
-      <br>
-      <br>
-      <br>
-      <br>
-      <br>
-      <br>
-      <br>
-      <br>
-      <br>
-      <br>
-      <br>
-      <br>
-    </div>
 
-    <!-- <div class="container darker">
-   <img src="/w3images/avatar_g2.jpg" alt="Avatar" class="right" style="width:100%;">
-      <p>Nah, I dunno. Play soccer.. or learn more coding perhaps?</p>
-      <span class="time-left">11:05</span>
-    </div> -->
-  </div>
-</div>
-<br>
-<br>
-  <form #myForm='ngForm' (ngSubmit)="sendMessage(myForm)">
-
-    <input class="form-control" type="text" #email="ngModel" name="userMessage" [(ngModel)]="userMessage"
-        placeholder="Enter Message: " required minlength="4">
-    <div *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="alert alert-danger" role="alert">
-        <div *ngIf="email?.errors?.['required']">Message is required. </div>
-        <div *ngIf="email?.errors?.['minlength']">Message must be greater than < 3. </div>
+      <div class="messenger-group-list" *ngIf="groups.length; else noGroups">
+        <button type="button" class="messenger-group" *ngFor="let group of groups"
+          [class.messenger-group--active]="group.id === selectedGroup?.id" (click)="selectGroup(group)">
+          <div>
+            <p class="messenger-group__title">{{ group.name }}</p>
+            <p class="messenger-group__description">
+              {{ group.description || 'No description provided' }}
+            </p>
+          </div>
+          <div class="messenger-group__meta">
+            <span class="badge" *ngIf="group.ownerId === userId">Owner</span>
+            <span class="badge badge--pending" *ngIf="group.membership?.status === 'pending'">
+              Pending
+            </span>
+            <span class="badge badge--success" *ngIf="group.membership?.status === 'approved'">
+              Joined
+            </span>
+            <span class="badge badge--ghost">{{ group.memberCount }} members</span>
+          </div>
+        </button>
+      </div>
+      <ng-template #noGroups>
+        <div class="app-empty">
+          No groups yet. Create one below or join an existing community.
         </div>
-        <br> <br>
+      </ng-template>
+    </article>
 
-        <button class="btn btn-primary" type="submit" name="submit" [disabled]="myForm.invalid">submit</button>
-</form>
+    <article class="app-card messenger-sidebar__panel">
+      <h3>Create a group</h3>
+      <form #createGroupForm="ngForm" (ngSubmit)="createGroup(createGroupForm)">
+        <input class="form-control" type="text" name="name" [(ngModel)]="createGroupModel.name" placeholder="Group name"
+          required minlength="3">
+
+        <textarea class="form-control" rows="3" name="description" [(ngModel)]="createGroupModel.description"
+          placeholder="Describe the topic"></textarea>
+
+        <label class="messenger-checkbox">
+          <input type="checkbox" name="requiresApproval" [(ngModel)]="createGroupModel.requiresApproval">
+          Require approval to join
+        </label>
+
+        <button class="app-btn" type="submit" [disabled]="createGroupForm.invalid || creatingGroup">
+          {{ creatingGroup ? 'Creating...' : 'Create group' }}
+        </button>
+      </form>
+    </article>
+  </aside>
+
+  <section class="messenger-content">
+    <article class="app-card messenger-card" *ngIf="selectedGroup as activeGroup; else selectGroupHint">
+      <header class="messenger-card__header">
+        <div>
+          <p class="app-section__subtitle">Now chatting</p>
+          <h2 class="app-section__title">{{ activeGroup.name }}</h2>
+          <p class="messenger-card__description">
+            {{ activeGroup.description || 'No description provided' }}
+          </p>
+        </div>
+        <div class="messenger-card__actions">
+          <button
+            class="app-btn app-btn--ghost"
+            type="button"
+            *ngIf="!canPost(activeGroup) && activeGroup.membership?.status !== 'pending'"
+            (click)="requestJoin(activeGroup)">
+            Request access
+          </button>
+          <span class="badge badge--ghost">
+            {{ activeGroup.memberCount }} members
+          </span>
+        </div>
+      </header>
+
+      <section class="messenger-requests"
+        *ngIf="activeGroup.ownerId === userId && activeGroup.pendingRequests?.length">
+        <h4>Pending requests</h4>
+        <div class="messenger-request" *ngFor="let request of activeGroup.pendingRequests">
+          <div>
+            <strong>{{ request.name }}</strong>
+            <p>{{ request.email }}</p>
+          </div>
+          <div class="messenger-request__actions">
+            <button type="button" class="app-btn app-btn--ghost" (click)="approveMember(request, 'reject')">
+              Reject
+            </button>
+            <button type="button" class="app-btn" (click)="approveMember(request, 'approve')">
+              Approve
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section *ngIf="canPost(activeGroup); else joinPrompt">
+        <div class="messenger-thread">
+          <div class="messenger-thread__list">
+            <div class="message-bubble" *ngFor="let message of messages"
+              [class.message-bubble--outgoing]="message.userId === userId">
+              <header class="message-bubble__meta">
+                <strong>{{ message.userName }}</strong>
+                <span>{{ message.messagedAt | date:'short' }}</span>
+              </header>
+              <p>{{ message.message }}</p>
+              <button class="app-btn app-btn--ghost" type="button"
+                *ngIf="message.userId === userId || activeGroup.ownerId === userId" (click)="deleteMessage(message)">
+                Delete
+              </button>
+            </div>
+            <div class="app-empty" *ngIf="!messages.length && !loadingMessages">
+              No messages yet. Say hello!
+            </div>
+            <div class="app-empty" *ngIf="loadingMessages">
+              Loading conversation...
+            </div>
+          </div>
+        </div>
+
+        <div class="messenger-typing-indicator" *ngIf="typingUsers.size > 0">
+          <span class="messenger-typing-indicator__text">{{ getTypingUsersNames() }}</span>
+        </div>
+        
+        <form #messageForm="ngForm" (ngSubmit)="sendMessage(messageForm)" class="messenger-form">
+          <input class="form-control" type="text" name="newMessage" [(ngModel)]="newMessage"
+            placeholder="Type your message" minlength="2" required (input)="onMessageInput()">
+          <button class="app-btn" type="submit" [disabled]="messageForm.invalid">
+            Send
+          </button>
+        </form>
+      </section>
+
+      <ng-template #joinPrompt>
+        <div class="app-empty">
+          <p *ngIf="activeGroup.membership?.status === 'pending'">
+            Your join request is pending approval from the group owner.
+          </p>
+          <p *ngIf="!activeGroup.membership || activeGroup.membership?.status === 'rejected'">
+            You need to be approved before messaging this group.
+          </p>
+          <button
+            class="app-btn"
+            type="button"
+            *ngIf="!activeGroup.membership || activeGroup.membership?.status === 'rejected'"
+            (click)="requestJoin(activeGroup)">
+            Request access
+          </button>
+        </div>
+      </ng-template>
+    </article>
+
+    <ng-template #selectGroupHint>
+      <article class="app-card app-empty">
+        <p>Select a group from the left panel to start chatting.</p>
+      </article>
+    </ng-template>
+  </section>
+</section>

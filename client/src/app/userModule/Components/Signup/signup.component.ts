@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
-// import { UserService } from '../../services/userServices/user.service';
+import { FormBuilder, NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AppComponent } from '../../../app.component';
 import { AlertService, AlertType } from '../../../sharedModule/alertServices/alert.service';
 import { UserService } from '../../services/user.service';
+import { UserSignupDTO, UserSignupResponseDTO, EmailValidationResponseDTO, UserInfoDTO } from '../../../sharedModule/sharedServices/api.dto';
 
 @Component({
   selector: 'app-signup',
@@ -12,21 +12,20 @@ import { UserService } from '../../services/user.service';
   styleUrls: ['./signup.component.css']
 })
 export class SignupComponent {
-  condition:boolean|undefined=false;
+  condition: boolean | undefined = false;
 
+  userData: UserSignupDTO = {
+    email: "",
+    password: "",
+    name: "",
+    phone: "",
+  };
 
-userData={
-      email:"",
-      password:"",
-      name:"",
-      phone:"",
-  }
+  checkboxval: string[] = [];
 
-  checkboxval:any=[];
-
-  message: string | any;
-  ipAddress: any;
-  usersDataFromDatabase:any;
+  message: string = '';
+  ipAddress: string = '';
+  usersDataFromDatabase: UserInfoDTO[] = [];
 
   constructor(private fBuilder: FormBuilder, private router: Router, private user:UserService,private alert:AlertService,private appLoader:AppComponent) {
     // this.user.getIpAddress().subscribe((data: any) => (this.ipAddress = data.ip));
@@ -38,63 +37,62 @@ userData={
 
 
 
-  validate(email:string): any {
-
-    this.user.emailValidate(email).subscribe(
-      (data: any) => {
-        if (data) {
+  validate(email: string): void {
+    this.user.emailValidate<EmailValidationResponseDTO>(email).subscribe({
+      next: (data: EmailValidationResponseDTO) => {
+        if (data.recieved && data.recieved.length > 0) {
           this.message = 'Found Email :)<br>';
-          // console.log(data);
-          this.usersDataFromDatabase = data.recieved[0];
+          this.usersDataFromDatabase = data.recieved;
         } else {
           this.message = 'Error This name is not in our Data base please try again!';
         }
       },
-      (error: any) => {
-        console.log('oops', error)
-        this.message =
-          'Error This name is not in our Data base please try again!'
+      error: (error) => {
+        console.log('oops', error);
+        this.message = 'Error This name is not in our Data base please try again!';
       },
-    )
-
+    });
 
     setTimeout(() => {
-      this.message = ''
-    }, 3000)
-
+      this.message = '';
+    }, 3000);
   }
 
-  postData(formData:any):any {
-  this.appLoader.isLoading=true;
-    this.user.insertData({ formValues: this.userData, userIp: this.ipAddress}).subscribe(
-        (data: any) => {
-          this.alert.showAlert(data.message,AlertType.Success);
-          setTimeout(()=>{
-            formData.reset();
-            this.appLoader.isLoading=false;
-            this.router.navigateByUrl("user/login");
-          },3000);
-        },
-        (error: any) => {
-          console.log(error);
-          // this.message = error.status+error.message;
-          this.message = error.error.message;
+  postData(formData: NgForm): void {
+    this.appLoader.isLoading = true;
+    this.user.insertData<UserSignupResponseDTO>({ formValues: this.userData, userIp: this.ipAddress }).subscribe({
+      next: (data: UserSignupResponseDTO) => {
+        this.alert.showAlert(data.message, AlertType.Success);
+        setTimeout(() => {
           formData.reset();
-        },
-      )
+          this.appLoader.isLoading = false;
+          this.router.navigateByUrl("user/login");
+        }, 3000);
+      },
+      error: (error) => {
+        console.log(error);
+        const errorMessage = error?.error?.message || 'Unable to sign up. Please try again.';
+        this.alert.showAlert(errorMessage, AlertType.Error);
+        this.appLoader.isLoading = false;
+        formData.reset();
+      },
+    });
   }
 
-  redirectUser(redirectTo: string) {
+  redirectUser(redirectTo: string): void {
     this.router.navigateByUrl('/' + redirectTo);
   }
 
-  checkboxEventHandler(event: any) {
+  checkboxEventHandler(event: Event): void {
+    const target = event.target as HTMLInputElement;
     const lang = this.checkboxval;
-    if (event.target.checked) {
-      lang.push(event.target.value);
+    if (target.checked) {
+      lang.push(target.value);
     } else {
-      const index = lang.findIndex((x: any) => x === event.target.value);
-      lang.splice(index,1);
+      const index = lang.findIndex((x: string) => x === target.value);
+      if (index > -1) {
+        lang.splice(index, 1);
+      }
     }
   }
 }

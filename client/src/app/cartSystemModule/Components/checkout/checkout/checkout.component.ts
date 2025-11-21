@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { FormBuilder } from '@angular/forms';
-import { AppComponent } from '../../../../app.component';
+import { FormBuilder, NgForm } from '@angular/forms';
 import {
   AlertService,
   AlertType,
 } from '../../../../sharedModule/alertServices/alert.service';
 import { CheckoutService } from '../../../services/checkout.service';
 import { SharedService } from '../../../../sharedModule/sharedServices/shared.service';
+import { CheckoutResponseDTO, CheckoutCartResponseDTO, CartItemWithProductDTO } from '../../../../sharedModule/sharedServices/api.dto';
 
 @Component({
   selector: 'app-checkout',
@@ -22,89 +22,163 @@ export class CheckoutComponent {
     expYear: '',
   };
 
-  message: any | undefined;
-  userCartData: any | undefined;
-  state: string | undefined;
+  message: string = '';
+  userCartData: CheckoutCartResponseDTO | null = null;
+  state: string = '';
+  isProcessing = false;
   constructor(
     private fBuilder: FormBuilder,
     private checkout: CheckoutService,
     private alert: AlertService,
     Http: HttpClient,
-    private getCount: SharedService,
-    private appLoader: AppComponent
+    private getCount: SharedService
   ) {
     this.getCheckoutData();
   }
-  submitPayment(PaymentValues: any) {
-    console.log(PaymentValues.form.value);
-    this.appLoader.isLoading = true;
+  get cartItems(): CartItemWithProductDTO[] {
+    if (this.userCartData && Array.isArray(this.userCartData.result)) {
+      return this.userCartData.result;
+    }
+    return [];
+  }
+
+  get totalDue(): number {
+    return this.userCartData?.resultPriceTotal ?? 0;
+  }
+
+  get hasCheckoutItems(): boolean {
+    return this.cartItems.length > 0 && this.totalDue > 0;
+  }
+
+  submitPayment(PaymentValues: NgForm): void {
+    if (!this.hasCheckoutItems) {
+      this.alert.showAlert('No items ready for payment. Please move items to checkout first.', AlertType.Warning);
+      return;
+    }
+
+    if (this.state !== 'CardPayMent') {
+      this.alert.showAlert('Please select the Card payment option before submitting card details.', AlertType.Warning);
+      return;
+    }
+
+    this.isProcessing = true;
     this.checkout
       .getBillCheckoutCompleted(
         localStorage.getItem('token'),
         PaymentValues.form.value,
         localStorage.getItem('userId'),
         this.state,
-        this.userCartData,
+        this.cartItems,
         localStorage.getItem('role')
       )
-      .subscribe(
-        (data: any) => {
-          console.log(data);
-          this.message = data.message;
-          this.alert.showAlert(data.message, AlertType.Success);
-          this.appLoader.isLoading = false;
+      .subscribe({
+        next: (data: unknown) => {
+          const response = data as CheckoutResponseDTO;
+          this.message = response.message;
+          this.alert.showAlert(response.message, AlertType.Success);
+          this.isProcessing = false;
           this.getCheckoutData();
           this.getCount.getUserCount();
         },
-        (error: any) => {
-          this.appLoader.isLoading = false;
-          console.log(error);
-        }
-      );
+        error: (error) => {
+          this.isProcessing = false;
+          const errorMessage = this.resolveErrorMessage(error, 'Payment processing failed. Please try again.');
+          this.alert.showAlert(errorMessage, AlertType.Error);
+        },
+      });
   }
 
-  check(currentvalue: any) {
+  check(currentvalue: string): void {
     this.state = currentvalue;
+
+    if (!this.hasCheckoutItems) {
+      this.alert.showAlert('No items ready for checkout yet.', AlertType.Warning);
+      return;
+    }
+
     if (this.state === 'CashOnDelivery') {
-      this.appLoader.isLoading = true;
+      this.isProcessing = true;
       this.checkout
         .getBillCheckoutCompleted(
           localStorage.getItem('token'),
           0,
           localStorage.getItem('userId'),
           this.state,
-          this.userCartData,
+          this.cartItems,
           localStorage.getItem('role')
         )
-        .subscribe(
-          (data: any) => {
-            this.message = data.message;
-            this.alert.showAlert(data.message, AlertType.Success);
+        .subscribe({
+          next: (data: unknown) => {
+            const response = data as CheckoutResponseDTO;
+            this.message = response.message;
+            this.alert.showAlert(response.message, AlertType.Success);
             this.getCheckoutData();
             this.getCount.getUserCount();
-            this.appLoader.isLoading = false;
-            this.userCartData = [];
+            this.isProcessing = false;
+            this.userCartData = null;
+            this.state = '';
           },
-          (error: any) => {
-            this.appLoader.isLoading = false;
-            console.log(error);
-          }
-        );
+          error: (error) => {
+            this.isProcessing = false;
+            const errorMessage = this.resolveErrorMessage(error, 'Checkout failed. Please try again.');
+            this.alert.showAlert(errorMessage, AlertType.Error);
+          },
+        });
     }
   }
-  getCheckoutData() {
-    this.appLoader.isLoading = true;
-    this.checkout.getAllCartItems(localStorage.getItem('token')).subscribe(
-      (data: any) => {
-        this.userCartData = data;
-        this.appLoader.isLoading = false;
+
+  getCheckoutData(): void {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      this.alert.showAlert('Please log in again to continue checkout.', AlertType.Warning);
+      this.userCartData = null;
+      return;
+    }
+
+    this.checkout.getAllCartItems<CheckoutCartResponseDTO>().subscribe({
+      next: (data: unknown) => {
+        const response = data as CheckoutCartResponseDTO;
+        const normalizedResult = Array.isArray(response?.result) ? response.result : [];
+        const normalizedTotal = typeof response?.resultPriceTotal === 'number' ? response.resultPriceTotal : 0;
+
+        if (!normalizedResult.length || normalizedTotal === 0) {
+          this.userCartData = null;
+          this.alert.showAlert(
+            'No items waiting for checkout. Use the cart page to move products into checkout.',
+            AlertType.Info
+          );
+        } else {
+          this.userCartData = {
+            result: normalizedResult,
+            resultPriceTotal: normalizedTotal,
+          };
+        }
       },
-      (error: any) => {
-        this.appLoader.isLoading = false;
-        console.log(error);
-      }
+      error: (error) => {
+        const errorMessage = this.resolveErrorMessage(error, 'Unable to load cart items.');
+        this.alert.showAlert(errorMessage, AlertType.Error);
+        this.userCartData = null;
+      },
+    });
+  }
+
+  private resolveErrorMessage(error: unknown, fallback: string): string {
+    if (!error) {
+      return fallback;
+    }
+    if (typeof error === 'string') {
+      return error;
+    }
+    if (error instanceof Error) {
+      return error.message || fallback;
+    }
+    const maybeHttp = error as { error?: any; message?: string; friendlyMessage?: string };
+    return (
+      maybeHttp?.friendlyMessage ||
+      maybeHttp?.error?.message ||
+      maybeHttp?.message ||
+      fallback
     );
-    this.appLoader.isLoading = false;
   }
 
   getMessageClass(status: number) {

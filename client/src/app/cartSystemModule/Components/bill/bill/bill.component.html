@@ -4,7 +4,7 @@
     style="color:white;background-color:green;border-radius:25px;text-align:center;padding:20px;">{{ this.message }}</div>
 
     <ng-template #elseBlock><div id="center"><i>Sorry! No purchase found , Check out to see your Bill </i></div></ng-template>
-<div *ngIf="this.show?.length!==0 else elseBlock">
+<div *ngIf="show && show.length !== 0; else elseBlock">
   <div class="table-responsive">
     <table class="table table-bordered table-hover table-dark">
         <tr >
@@ -26,12 +26,12 @@
             <td>{{ bill.total }}</td>
             <td>{{ bill.phone }}</td>
             <td>
-             <button class="alert alert-info p-2 m-1" (click)="getPdf(bill.uuid)">view</button>
+             <button class="alert alert-info p-2 m-1" (click)="getPdf(bill.uuid || '')" *ngIf="bill.uuid">view</button>
              <!-- <button class="alert alert-info p-2 m-1" (click)="GenerateReport(bill.userId)">other</button> -->
 
              <span  [hidden]="userRole!=='admin'">
                <!-- &nbsp;&nbsp;&nbsp;&nbsp;  |  &nbsp;&nbsp;&nbsp;&nbsp; -->
-              <button class="alert alert-danger p-2 m-1" (click)="deleteBill(bill.uuid)">Delete</button>
+              <button class="alert alert-danger p-2 m-1" (click)="deleteBill(bill.uuid || '')" *ngIf="bill.uuid">Delete</button>
               </span>
             </td>
         </tr>

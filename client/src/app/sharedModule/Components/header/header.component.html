@@ -1,87 +1,75 @@
-<!-- <p>header works!</p> -->
-<div *ngIf="isUser">
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="app-navbar" *ngIf="isUser">
+  <div class="app-navbar__brand" (click)="redirectUser('')">
+    <div class="app-navbar__logo">CS</div>
+    <div>
+      <p>CartSystem</p>
+      <small>Unified commerce workspace</small>
+    </div>
+  </div>
 
-    <!-- <ng-toast></ng-toast> -->
-    <a class="navbar-brand" (click)="redirectUser('')"><img src="../favicon.ico"></a>
-    <!-- <a class="navbar-brand" (click)="redirectUser('')">Navbar</a> -->
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
+  <div class="app-navbar__links" *ngIf="userRole; else guestLinks">
+    <button type="button" class="app-nav-link" (click)="redirectUser('')">
+      Home
     </button>
-    <div *ngIf="this.message!=null"
-      style="color:lightgreen;background-color:rgb(0, 224, 0);border-radius:25px;text-align:center;padding:20px;">
-      {{ this.message }}
+    <button type="button" class="app-nav-link" *ngIf="userRole" (click)="redirectUser('cartSystem/product')">
+      Products
+    </button>
+    <button
+      type="button"
+      class="app-nav-link"
+      *ngIf="userRole==='user'"
+      (click)="redirectUser('cartSystem/cart')">
+      Cart
+      <span class="app-badge">{{ responseCountCart[0]?.total ?? 0 }}</span>
+    </button>
+    <button type="button" class="app-nav-link" *ngIf="userRole" (click)="redirectUser('cartSystem/bill')">
+      Bills
+      <span class="app-badge">{{ responseCountBill[0]?.total ?? 0 }}</span>
+    </button>
+    <button
+      type="button"
+      class="app-nav-link"
+      *ngIf="userRole==='user'"
+      (click)="redirectUser('cartSystem/checkout')">
+      Checkout
+      <span class="app-badge">{{ responseCountCheckout[0]?.total ?? 0 }}</span>
+    </button>
+    <button type="button" class="app-nav-link" *ngIf="userRole" (click)="redirectUser('cartSystem/category')">
+      Categories
+    </button>
+    <button type="button" class="app-nav-link" *ngIf="isUserAdmin!==0" (click)="redirectUser('admin/dashboard')">
+      Admin
+    </button>
+    <button type="button" class="app-nav-link" *ngIf="userRole" (click)="redirectUser('user/message')">
+      Messenger
+    </button>
+  </div>
+
+  <ng-template #guestLinks>
+    <div class="app-navbar__links">
+      <button type="button" class="app-nav-link" (click)="redirectUser('user/login')">Login</button>
+      <button type="button" class="app-nav-link" (click)="redirectUser('user/signup')">Sign up</button>
     </div>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav mr-auto">
-        <li class="nav-item active">
-          <a class="nav-link" (click)="redirectUser('')">Home <span class="sr-only">(current)</span></a>
-        </li>
-        <li [hidden]="this.userRole===null" class="nav-item">
-          <a class="nav-link" (click)="redirectUser('cartSystem/product')">product</a>
-        </li>
+  </ng-template>
 
-        <li [hidden]="this.userRole===null||this.userRole!=='user'" class="nav-item">
-          <a class="nav-link" (click)="redirectUser('cartSystem/cart')">cart
-            <sup>
-              <span class="badge" [hidden]="this.responseCountCart[0]?.total===null">
-                {{this.responseCountCart[0]?.total}}
-              </span>
-              <span class="non" [hidden]="this.responseCountCart[0]?.total!==null">0</span>
-
-            </sup>
-          </a>
-        </li>
-
-        <li [hidden]="this.userRole===null" class="nav-item">
-          <a class="nav-link" (click)="redirectUser('cartSystem/bill')">Bill
-            <sup>
-              <span class="badge" [hidden]="this.responseCountBill[0]?.total===null">
-                {{ this.responseCountBill[0]?.total }}
-              </span>
-              <span class="non" [hidden]="this.responseCountBill[0]?.total!==null">0</span>
-            </sup>
-          </a>
-        </li>
-
-
-        <li [hidden]="this.userRole===null||this.userRole==='admin'" class="nav-item">
-          <a class="nav-link" (click)="redirectUser('cartSystem/checkout')">checkout
-            <sup>
-              <span class="badge" [hidden]="this.responseCountCheckout[0]?.total===null">
-                {{this.responseCountCheckout[0]?.total}}
-              </span>
-              <span class="non" [hidden]="this.responseCountCheckout[0]?.total!==null">0</span>
-            </sup>
-          </a>
-        </li>
-
-        <li [hidden]="this.userRole===null" class="nav-item">
-          <a class="nav-link" (click)="redirectUser('cartSystem/category')">Category</a>
-        </li>
-        <li *ngIf="this.user===0" class="nav-item">
-          <a class="nav-link" (click)="redirectUser('user/login')">login</a>
-        </li>
-        <li *ngIf="this.user===0" class="nav-item">
-          <a class="nav-link" (click)="redirectUser('user/signup')">signup</a>
-        </li>
-        <li *ngIf="this.isUserAdmin!==0" class="nav-item">
-          <a class="nav-link" (click)="redirectUser('admin/dashboard')">adminPage</a>
-        </li>
-        <li [hidden]="this.userRole===null" class="nav-item">
-          <a class="nav-link" (click)="redirectUser('user/message')">messager</a>
-        </li>
-      </ul>
-
-      <div class="collapse navbar-collapse justify-content-end" id="navbarCollapse">
-        <ul class="navbar-nav">
-          <li *ngIf="this.user!==0" class="nav-item">
-            <a class="nav-link" (click)="logoutUser()">Logout</a>
-          </li>
-        </ul>
-      </div>
+  <div class="app-navbar__actions">
+    <div class="app-user-pill" *ngIf="userRole">
+      <span class="app-user-pill__dot" [class.app-user-pill__dot--admin]="userRole === 'admin'"></span>
+      <span>{{ userRole | titlecase }}</span>
     </div>
-  </nav>
-</div>
-
+    <span class="app-pill" *ngIf="userRole">
+      {{ userName }}
+    </span>
+    <button
+      type="button"
+      class="app-btn app-btn--ghost"
+      *ngIf="user!==0 && userRole"
+      (click)="logoutUser()">
+      Logout
+    </button>
+    <div class="app-toolbar" *ngIf="user===0">
+      <button type="button" class="app-btn app-btn--ghost" (click)="redirectUser('user/login')">Login</button>
+      <button type="button" class="app-btn" (click)="redirectUser('user/signup')">Sign up</button>
+    </div>
+  </div>
+</nav>

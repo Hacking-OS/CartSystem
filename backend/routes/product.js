@@ -1,190 +1,171 @@
 const express = require("express");
-const myConnection = require("../connection");
 const router = express.Router();
 const authentication = require("../services/authentication");
 const checkRole = require("../services/checkRole");
+const { Product, Category, UserCart } = require("../database/models");
+const { Op } = require("sequelize");
 
-
-router.post("/add", authentication.authenticateToken, checkRole.CheckRole, (req, res, next) => {
-  let product = req.body;
-  query = "INSERT INTO product (name,categoryId,description,price,status) values (?,?,?,?,1)";
-  myConnection.query(query, [product.userInput.name, product.userInput.catID, product.userInput.description, product.userInput.price], (err, results) => {
-    if (err) {
-      return res.status(500).json(err);
-    } else {
-      return res.status(200).json({
-        message: "Product registered Successfully !"
-      });
-    }
-  });
+router.post("/add", authentication.authenticateToken, checkRole.CheckRole, async (req, res) => {
+  try {
+    const payload = req.body.userInput || {};
+    await Product.create({
+      name: payload.name,
+      categoryId: payload.catID,
+      description: payload.description,
+      price: payload.price,
+      status: true,
+      image: payload.image || "",
+      subCategoryID: payload.subCategoryID || "",
+    });
+    return res.status(200).json({ message: "Product registered Successfully !" });
+  } catch (error) {
+    return res.status(500).json(error);
+  }
 });
 
+router.post("/addToCart", authentication.authenticateToken, async (req, res) => {
+  try {
+    const payload = req.body;
+    const userId = parseInt(payload.userId, 10);
+    const productId = payload.productId;
+    const productPrice = payload.productPrice;
 
-router.post("/addToCart", authentication.authenticateToken, (req, res, next) => {
-  let product = req.body;
+    const cartEntry = await UserCart.findOne({
+      where: { user_id: userId, product_id: productId, userCheckOut: 0 },
+    });
 
-  let query = "SELECT quantity from user_cart where user_id=? and product_id=? and userCheckOut=0";
-  myConnection.query(query, [parseInt(product.userId),product.productId], (err, result) => {
-    if (err) {
-      return res.status(500).json(err);
-    } else {
-      if (result.length !== 0) {
-        let Quantity = result[0].quantity+1;
-        let Total = product.productPrice*Quantity;
-        let query = "UPDATE user_cart SET quantity=?,total_price=? WHERE userCheckOut=0 AND user_id=? AND product_id=?";
-        myConnection.query(query, [Quantity,Total,parseInt(product.userId),product.productId], (err, results) => {
-          if (err) {
-            return res.status(500).json(err);
-          } else {
-            return res.status(200).json({
-              message: "Updated To Cart Successfully !"
-            });
-          }
-        });
-      }else{
-        let Quantity = 1;
-        let Total = product.productPrice*Quantity;
-        query = "INSERT INTO user_cart (product_id,quantity,total_price,user_id,userCheckOut) values (?,?,?,?,0)";
-        myConnection.query(query, [product.productId,Quantity,Total,parseInt(product.userId)], (err, results) => {
-          if (err) {
-            return res.status(500).json(err);
-          } else {
-            return res.status(200).json({
-              message: "Added To Cart Successfully !",
-              response: results
-            });
-          }
-        });
-
-      }
+    if (cartEntry) {
+      const quantity = cartEntry.quantity + 1;
+      const total = productPrice * quantity;
+      cartEntry.quantity = quantity;
+      cartEntry.total_price = total;
+      await cartEntry.save();
+      return res.status(200).json({ message: "Updated To Cart Successfully !" });
     }
-  });
+
+    await UserCart.create({
+      user_id: userId,
+      product_id: productId,
+      quantity: 1,
+      total_price: productPrice,
+      userCheckOut: 0,
+    });
+    return res.status(200).json({ message: "Added To Cart Successfully !" });
+  } catch (error) {
+    return res.status(500).json(error);
+  }
 });
 
-
-
-router.get("/get", authentication.authenticateToken, checkRole.CheckRole, (req, res, next) => {
-  query = "SELECT product.id,product.name,product.price,product.description,product.categoryId,category.name as category,product.status FROM product INNER JOIN category ON product.categoryId = category.id;";
-  myConnection.query(query, (err, results) => {
-    if (err) {
-      return res.status(500).json(err);
-    } else {
-      return res.status(200).json(results);
-    }
-  });
+router.get("/get", authentication.authenticateToken, checkRole.CheckRole, async (req, res) => {
+  try {
+    const products = await Product.findAll({
+      include: [{ model: Category, as: "category", attributes: ["name"] }],
+    });
+    return res.status(200).json(products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      price: p.price,
+      description: p.description,
+      categoryId: p.categoryId,
+      category: p.category ? p.category.name : null,
+      status: p.status,
+    })));
+  } catch (error) {
+    return res.status(500).json(error);
+  }
 });
 
-
-
-router.get("/check", authentication.authenticateToken, (req, res, next) => {
-  query = "SELECT * from users";
-  myConnection.query(query, (err, results) => {
-    if (err) {
-      return res.status(500).json(err);
-    } else {
-      return res.status(200).json({message:"page is refreshed!"});
-    }
-  });
+router.get("/getUserProducts", authentication.authenticateToken, async (req, res) => {
+  try {
+    const products = await Product.findAll({
+      where: { status: true },
+      include: [{ model: Category, as: "category", attributes: ["name"] }],
+    });
+    return res.status(200).json(products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      price: p.price,
+      description: p.description,
+      categoryId: p.categoryId,
+      category: p.category ? p.category.name : null,
+      status: p.status,
+    })));
+  } catch (error) {
+    return res.status(500).json(error);
+  }
 });
 
-
-
-
-
-router.get("/getUserProducts", authentication.authenticateToken, (req, res, next) => {
-  query = "SELECT product.id,product.name,product.price,product.description,product.categoryId,category.name as category,product.status FROM product INNER JOIN category ON product.categoryId = category.id where product.status=1;";
-  myConnection.query(query, (err, results) => {
-    if (err) {
-      return res.status(500).json(err);
-    } else {
-      return res.status(200).json(results);
-    }
-  });
+router.get("/getCategoryById/:id", authentication.authenticateToken, async (req, res) => {
+  try {
+    const products = await Product.findAll({
+      where: { categoryId: req.params.id, status: true },
+    });
+    return res.status(200).json(products);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
 });
 
-
-
-
-
-router.get("/getCategoryById/:id", authentication.authenticateToken, (req, res, next) => {
-  let product = req.params.id;
-  query = "SELECT * from product where categoryId=? and status=1";
-  myConnection.query(query, [product], (err, results) => {
-    if (err) {
-      return res.status(500).json(err);
-    } else {
-      return res.status(200).json(results);
+router.get("/GetById/:id", authentication.authenticateToken, async (req, res) => {
+  try {
+    const product = await Product.findOne({
+      where: { id: req.params.id, status: true },
+    });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
     }
-  });
+    return res.status(200).json(product);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
 });
 
-router.get("/GetById/:id", authentication.authenticateToken, (req, res, next) => {
-  let product = req.params.id;
-  query = "SELECT * from product where categoryId=? and status=1";
-  myConnection.query(query, [product], (err, results) => {
-    if (err) {
-      return res.status(500).json(err);
-    } else {
-      return res.status(200).json(results[0]);
+router.patch("/update", authentication.authenticateToken, checkRole.CheckRole, async (req, res) => {
+  try {
+    const payload = req.body.userInput || {};
+    const [affected] = await Product.update(
+      {
+        name: payload.name2,
+        categoryId: payload.catID2,
+        description: payload.description2,
+        price: payload.price2,
+      },
+      { where: { id: payload.ProductId2 } }
+    );
+    if (!affected) {
+      return res.status(404).json({ message: "Invalid Data provided!" });
     }
-  });
+    return res.status(200).json({ message: "Product Updated Successfully !" });
+  } catch (error) {
+    return res.status(500).json(error);
+  }
 });
 
-
-router.patch("/update", authentication.authenticateToken, checkRole.CheckRole, (req, res, next) => {
-  let product = req.body;
-  query = "UPDATE product SET product.name=?,product.categoryId=?,product.description=?,product.price=? where product.id = ?";
-  myConnection.query(query, [product.userInput.name2, product.userInput.catID2, product.userInput.description2, product.userInput.price2,product.userInput.ProductId2], (err, results) => {
-    if (err) {
-      return res.status(500).json(err);
-    } else {
-      if (results.affectedRows == 0) {
-        return res.status(404).json({
-          message: "Invalid Data provided!"
-        });
-      }
-      return res.status(200).json({
-        message: "Product Updated Successfully !"
-      });
+router.delete("/delete/:id", authentication.authenticateToken, checkRole.CheckRole, async (req, res) => {
+  try {
+    const removed = await Product.destroy({ where: { id: req.params.id } });
+    if (!removed) {
+      return res.status(404).json({ message: "Invalid Data provided!" });
     }
-  });
+    return res.status(200).json({ message: "Product Deleted Successfully !" });
+  } catch (error) {
+    return res.status(500).json(error);
+  }
 });
 
-router.delete("/delete/:id", authentication.authenticateToken, checkRole.CheckRole, (req, res, next) => {
-  let product = req.params.id;
-  query = "DELETE FROM product where id=?";
-  myConnection.query(query, [product], (err, results) => {
-    if (err) {
-      return res.status(500).json(err);
-    } else {
-      if (results.affectedRows == 0) {
-        return res.status(404).json({
-          message: "Invalid Data provided!"
-        });
-      }
-      return res.status(200).json({
-        message: "Product Deleted Successfully !"
-      });
+router.patch("/updateStatus", authentication.authenticateToken, checkRole.CheckRole, async (req, res) => {
+  try {
+    const payload = req.body;
+    const [affected] = await Product.update(
+      { status: payload.status },
+      { where: { id: payload.userInput } }
+    );
+    if (!affected) {
+      return res.status(404).json({ message: "Invalid Data provided!" });
     }
-  });
-});
-
-router.patch("/updateStatus", authentication.authenticateToken, checkRole.CheckRole, (req, res, next) => {
-  let product = req.body;
-  query = "UPDATE product SET status=? where id=?";
-  myConnection.query(query, [product.status, product.userInput], (err, results) => {
-    if (err) {
-      return res.status(500).json(err);
-    } else {
-      if (results.affectedRows == 0) {
-        return res.status(404).json({
-          message: "Invalid Data provided!"
-        });
-      }
-      return res.status(200).json({
-        message: "Product status Updated Successfully !"
-      });
-    }
-  });
+    return res.status(200).json({ message: "Product status Updated Successfully !" });
+  } catch (error) {
+    return res.status(500).json(error);
+  }
 });
 module.exports = router;

@@ -1,9 +1,11 @@
 import { Component } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
+import { FormBuilder, NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AppComponent } from '../../../app.component';
 import { AlertService, AlertType } from '../../../sharedModule/alertServices/alert.service';
 import { UserService } from '../../services/user.service';
+import { SocketService } from '../../../sharedModule/sharedServices/socket.service';
+import { UserLoginDTO, EmailValidationResponseDTO, UserInfoDTO } from '../../../sharedModule/sharedServices/api.dto';
 
 @Component({
   selector: 'app-login',
@@ -19,13 +21,13 @@ userData={
       password:"",
   }
 
-  checkboxval:any=[];
+  checkboxval: string[] = [];
 
-  message: string | any;
-  ipAddress: any;
-  usersDataFromDatabase:any;
+  message: string = '';
+  ipAddress: string = '';
+  usersDataFromDatabase: UserInfoDTO | undefined = undefined;
 
-  constructor(private fBuilder: FormBuilder, private router: Router,private alertService:AlertService,private appMain:AppComponent,private user : UserService) {
+  constructor(private fBuilder: FormBuilder, private router: Router,private alertService:AlertService,private appMain:AppComponent,private user : UserService,private socketService: SocketService) {
     // this.user.getIpAddress().subscribe((data: any) => (this.ipAddress = data.ip));
     // if(localStorage.getItem('role')!=null||localStorage.getItem('role')!==undefined){
       // window.location.replace("http://192.168.0.38:4200");
@@ -35,30 +37,25 @@ userData={
 
 
 
-  validate(email:string): any {
-
-    this.user.emailValidate(email).subscribe(
-      (data: any) => {
-        if (data) {
+  validate(email: string): void {
+    this.user.emailValidate<EmailValidationResponseDTO>(email).subscribe({
+      next: (data: EmailValidationResponseDTO) => {
+        if (data.recieved && data.recieved.length > 0) {
           this.message = 'Found Email :)<br>';
-          // console.log(data);
           this.usersDataFromDatabase = data.recieved[0];
         } else {
           this.message = 'Error This name is not in our Data base please try again!';
         }
       },
-      (error: any) => {
-        console.log('oops', error)
-        this.message =
-          'Error This name is not in our Data base please try again!'
+      error: (error) => {
+        console.log('oops', error);
+        this.message = 'Error This name is not in our Data base please try again!';
       },
-    )
-
+    });
 
     setTimeout(() => {
-      this.message = ''
-    }, 3000)
-
+      this.message = '';
+    }, 3000);
   }
 
 
@@ -70,48 +67,60 @@ userData={
 
 
 
-  postData(formData:any):any {
-    this.appMain.isLoading=true;
-    this.user.loginUser({ formValues: this.userData, userIp: this.ipAddress}).subscribe(
-        (data: any) => {
-            // this.message = "Login SuccessFully!";
-            this.alertService.showAlert("Login Successfully!",AlertType.Success);
-            localStorage.setItem("token",data.token);
-            localStorage.setItem("role",data.userRole);
-            localStorage.setItem("userId",data.userId);
-            localStorage.setItem("email",data.email);
-            localStorage.setItem("refreshToken",data.refreshToken);
-            localStorage.setItem("userName",data.userName);
+  postData(formData: NgForm): void {
+    this.appMain.isLoading = true;
+    this.user.loginUser<UserLoginDTO>({ formValues: this.userData, userIp: this.ipAddress }).subscribe({
+      next: (data: UserLoginDTO) => {
+            // Store authentication data in localStorage
+            if (data.token) {
+              localStorage.setItem('token', data.token);
+            }
+            if (data.userRole) {
+              localStorage.setItem('role', data.userRole);
+            }
+            if (data.userId) {
+              localStorage.setItem('userId', data.userId.toString());
+            }
+            if (data.refreshToken) {
+              localStorage.setItem('refreshToken', data.refreshToken);
+            }
+            if (data.userStatus !== undefined) {
+              localStorage.setItem('userStatus', data.userStatus.toString());
+            }
+            
+            // Socket.IO will auto-connect via AppComponent initialization
+            // Just ensure it connects if not already connected
+            this.socketService.connect();
+            
+            this.alertService.showAlert('Login successful!', AlertType.Success);
             setTimeout(()=>{
-              // window.location.replace("http://192.168.0.38:8081");
-              this.router.navigateByUrl("");
               this.appMain.isLoading=false;
+              this.router.navigateByUrl("/home");
+              formData.reset();
             },4500);
-            // window.location.replace("http://192.168.0.38:80/cart-system");
-            formData.reset();
-        },
-        (error: any) => {
-          console.log(error);
-          // this.message = error.status+error.message;
-          // this.message = error.error.message;
-          this.alertService.showAlert(error.error.message||error.statusText,AlertType.Error);
-          // this.alertService.showAlert("Error Something Went Wrong!",AlertType.Error);
-          setTimeout(()=>{
-            this.appMain.isLoading=false;
-          },4500);
-          // this.message = error.error.message;
-          formData.reset();
-        },
-      )
+      },
+      error: (error) => {
+        console.log(error);
+        const errorMessage = error?.error?.message || error?.statusText || error?.message || 'Login failed. Please try again.';
+        this.alertService.showAlert(errorMessage, AlertType.Error);
+        setTimeout(() => {
+          this.appMain.isLoading = false;
+        }, 4500);
+        formData.reset();
+      },
+    });
   }
 
-  checkboxEventHandler(event: any) {
+  checkboxEventHandler(event: Event): void {
+    const target = event.target as HTMLInputElement;
     const lang = this.checkboxval;
-    if (event.target.checked) {
-      lang.push(event.target.value);
+    if (target.checked) {
+      lang.push(target.value);
     } else {
-      const index = lang.findIndex((x: any) => x === event.target.value);
-      lang.splice(index,1);
+      const index = lang.findIndex((x: string) => x === target.value);
+      if (index > -1) {
+        lang.splice(index, 1);
+      }
     }
   }
 }

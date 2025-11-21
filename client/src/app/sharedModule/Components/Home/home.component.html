@@ -1,51 +1,62 @@
-<!-- <p>Home works!</p> -->
-<app-header></app-header>
-<!-- {{ this.usersDataFromDatabase|json }} -->
-<div class="container-fluid">
+﻿<app-header></app-header>
 
-  <div class="card bg-dark mt-4">
-    <div class="card-title m-2">
-      <h3>
-        Popup Example :
-      </h3>
+<section class="app-shell home">
+  <div class="app-hero">
+    <p class="app-hero__eyebrow">Demo Environment</p>
+    <h1 class="app-hero__title">
+      Centrally themed UI built for professional CartSystem showcases.
+    </h1>
+    <p class="app-hero__copy">
+      Every module, storefront, admin, and support now share one design language,
+      unified spacing, and consistent surface treatments. Use the tiles below to trigger
+      toast demos, explore Angular signals, and validate inputs without leaving the page.
+    </p>
+    <div class="app-hero__cta">
+      <button class="app-btn" type="button" (click)="showmessage('Success')">
+        Trigger success toast
+      </button>
+      <button class="app-btn app-btn--ghost" type="button" (click)="showmessage('Info')">
+        Show info toast
+      </button>
     </div>
-    <div class="card-body m-2">
-      <button class="btn btn-xs btn-danger mr-3" role="button" (click)="showmessage('Error')">Error</button>
-      <button class="btn btn-xs btn-success mr-3" role="button" (click)="showmessage('Success')">Success</button>
-      <button class="btn btn-xs btn-warning mr-3" style="color:white;" role="button" (click)="showmessage('Warning')">Warning</button>
-      <button class="btn btn-xs btn-info" role="button" (click)="showmessage('Info')">Info</button>
-    </div>
-
   </div>
 
-  <!-- <div class="card bg-dark mt-4">
-    <div class="card-title m-2">
-      <h3>
-
-      </h3>
-    </div>
-    <div class="card-body m-2">
-      <div [innerHTML]="safeHtmlContent"></div>
-      <div appCspNonce>
-        <script>alert("Attack is Valid Hahahaha!")</script>
+  <div class="app-grid app-grid--split">
+    <article class="app-card">
+      <div class="app-section__header">
+        <p class="app-section__subtitle">Alert studio</p>
+        <h3 class="app-section__title">Reusable popup palette</h3>
+        <p>
+          Demo the four primary alert states we surface across the app shell. Buttons
+          reuse the theme tokens declared in <code>styles.css</code>.
+        </p>
       </div>
-    </div>
-  </div> -->
+      <div class="app-toolbar home-toolbar">
+        <button class="app-btn app-btn--ghost home-btn--error" type="button" (click)="showmessage('Error')">
+          Error
+        </button>
+        <button class="app-btn home-btn--success" type="button" (click)="showmessage('Success')">
+          Success
+        </button>
+        <button class="app-btn app-btn--ghost home-btn--warning" type="button" (click)="showmessage('Warning')">
+          Warning
+        </button>
+        <button class="app-btn app-btn--ghost" type="button" (click)="showmessage('Info')">
+          Info
+        </button>
+      </div>
+    </article>
 
-
-
-  <div class="card bg-dark mt-4">
-    <div class="card-title m-2">
-      <h3>
-        Using Signal , Computed , Effect , Set , Update Properties Example of Signals
-      </h3>
-    </div>
-    <div class="card-body m-2">
-      <table class="table table-bordered table-hover table-dark">
+    <article class="app-card">
+      <div class="app-section__header">
+        <p class="app-section__subtitle">Signals Playground</p>
+        <h3 class="app-section__title">Live identity composer</h3>
+      </div>
+      <table class="app-table">
         <tr>
-          <th>FirstName</th>
-          <th>LastName</th>
-          <th>FullName</th>
+          <th>First name</th>
+          <th>Last name</th>
+          <th>Full name</th>
         </tr>
         <tr>
           <td>{{ firstName() }}</td>
@@ -53,105 +64,56 @@
           <td>{{ fullName() }}</td>
         </tr>
       </table>
-      <br>
-      <br>
-
-      <div class="row">
-        <div class="col-md-3"><input type="text" name="firstName" id="firstName" #fname [value]="firstName()"
-            placeholder="enter First Name:" class="form-control">
-        </div>
-        <div class="col-md-2">
-          <button class="btn btn-primary" (click)="changeFirstName(fname.value)">change FirstName</button>
-        </div>
-
-        <div class="col-md-3"><input type="text" name="lastName" id="lastName" #lname [value]="lastName()"
-            placeholder="enter Last Name:" class="form-control">
-        </div>
-        <div class="col-md-2">
-          <button class="btn btn-primary" (click)="changeLastName(lname.value)">change LastName</button>
-        </div>
+      <div class="app-input-group home-inputs">
+        <input type="text" #fname [value]="firstName()" placeholder="First name" (keyup.enter)="changeFirstName(fname.value)">
+        <button class="app-btn" type="button" (click)="changeFirstName(fname.value)">
+          Update first name
+        </button>
       </div>
-      <br><br>
-      <hr>
-      <br><br>
-      <div>
-        <h3>add , remove ,  using set and update using Signals</h3>
+      <div class="app-input-group home-inputs">
+        <input type="text" #lname [value]="lastName()" placeholder="Last name" (keyup.enter)="changeLastName(lname.value)">
+        <button class="app-btn" type="button" (click)="changeLastName(lname.value)">
+          Update last name
+        </button>
       </div>
-      <br>
-
-  <div class="row text-center">
-    <div class="col-md-2 text-center">
-      <button class="btn btn-primary mr-3" (click)="add()">add</button>
-      {{ quantity() }}
-      <button class="btn btn-danger ml-3" (click)="remove()">remove</button>
-    </div>
+    </article>
   </div>
 
-  <br><br>
-  <hr>
-  <br><br>
-  <div>
-    <h3>add Employee ,  using and update in Signals</h3>
-  </div>
-  <ul>
-    <li *ngFor="let employee of employees()">
-      {{ employee.name }} - {{ employee.position }} - {{ employee.department }}
-    </li>
-  </ul>
-
-  <form #form="ngForm" [formGroup]="employeeForm" (ngSubmit)="addEmployee()">
-    <div class="row">
-      <div class="col-md-2"><input type="text" formControlName="name" name="empname" id="empname"
-          placeholder="enter emp name:" class="form-control"></div>
-      <div class="col-md-2"><input type="text" formControlName="position" name="position" id="position"
-          placeholder="enter position:" class="form-control"></div>
-      <div class="col-md-2"><input type="text" formControlName="department" name="department" id="department"
-          placeholder="enter department:" class="form-control"></div>
-      <div class="col-md-2">
-        <button class="btn btn-primary" type="submit">add</button>
+  <div class="app-grid">
+    <article class="app-card home-quantity">
+      <div class="app-section__header">
+        <p class="app-section__subtitle">Inventory signal</p>
+        <h3 class="app-section__title">Quantity adjustments</h3>
+        <p>Demonstrates <code>set</code> / <code>update</code> on Angular signals.</p>
       </div>
-    </div>
-  </form>
-</div>
-    </div>
+      <div class="home-quantity__controls">
+        <button class="app-btn app-btn--ghost" type="button" (click)="remove()">Remove</button>
+        <div class="app-metric">
+          <span class="app-metric__value">{{ quantity() }}</span>
+          <span class="app-metric__label">items</span>
+        </div>
+        <button class="app-btn" type="button" (click)="add()">Add</button>
+      </div>
+    </article>
+
+    <article class="app-card">
+      <div class="app-section__header">
+        <p class="app-section__subtitle">Team roster</p>
+        <h3 class="app-section__title">Signal-based list updates</h3>
+      </div>
+      <ul class="app-list">
+        <li *ngFor="let employee of employees()">
+          {{ employee.name }} - {{ employee.position }} - {{ employee.department }}
+        </li>
+      </ul>
+      <form class="home-form app-input-group" [formGroup]="employeeForm" (ngSubmit)="addEmployee()">
+        <input type="text" formControlName="name" placeholder="Name">
+        <input type="text" formControlName="position" placeholder="Position">
+        <input type="text" formControlName="department" placeholder="Department">
+        <button class="app-btn" type="submit">Add employee</button>
+      </form>
+    </article>
   </div>
-
-
-
-
-
-
-
-
-
-
-  <!-- <table class="table-responsive">
-    <tr>
-      <th>name</th>
-      <th>position</th>
-      <th>department</th>
-    </tr>
-
-  </table> -->
-  <!-- {#each $employees as employee (employee.id)}
-  <tr>
-    <td>{{ employee.name }}</td>
-    <td>{{ employee.position }}</td>
-    <td>{{ employee.department }}</td>
-  </tr>
-  {/each} -->
-
-
+</section>
 
 <app-footer></app-footer>
-
-<!-- <app-file-uploader></app-file-uploader> -->
-<!-- <script>
-  const socket = io('http://localhost:3000');
-socket.on('chat-message',socket => {
-  console.log(socket);
-});
-</script> -->
-<!--
-<a (click)="redirectUser('bill')">bill</a>
-<a (click)="redirectUser('product')">Product</a> -->

@@ -1,11 +1,13 @@
 
-import { Component, Signal, computed, effect, signal } from '@angular/core';
+import { Component, Signal, computed, effect, signal, OnDestroy, OnInit } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 import { FormBuilder, FormControl, FormGroup, NgForm } from '@angular/forms';
 import { empInterface } from './interface/home.interface';
 import { AlertService, AlertType } from '../../alertServices/alert.service';
 import { RefreshtokenService } from '../../interceptors/refreshtoken.service';
+import { SocketService } from '../../sharedServices/socket.service';
+import { ApprovalStatusChangedDTO } from '../../sharedServices/socket.dto';
 
 
 
@@ -15,7 +17,7 @@ import { RefreshtokenService } from '../../interceptors/refreshtoken.service';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit, OnDestroy {
   usersDataFromDatabase:any;
   catDropdown:any;
   userRole=localStorage.getItem('role');
@@ -33,10 +35,12 @@ export class HomeComponent {
 
 employeeForm!:FormGroup;
 
-constructor(private getToken:RefreshtokenService,
+constructor(
+  private getToken:RefreshtokenService,
   private alertService:AlertService,
   private sanitizer: DomSanitizer,
   private fb: FormBuilder,
+  private socketService: SocketService
   ){
 
 }
@@ -47,6 +51,19 @@ ngOnInit(): void {
    position:new FormControl(''),
    department:new FormControl(''),
  });
+ 
+ // Listen for approval notifications
+ this.socketService.onApprovalStatusChanged((data: ApprovalStatusChangedDTO) => {
+   if (data.approved) {
+     this.alertService.showAlert(data.message, AlertType.Success);
+   } else {
+     this.alertService.showAlert(data.message, AlertType.Warning);
+   }
+ });
+}
+
+ngOnDestroy(): void {
+  this.socketService.off('approval:statusChanged');
 }
 
 

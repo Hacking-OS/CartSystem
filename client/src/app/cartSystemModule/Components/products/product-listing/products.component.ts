@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AlertService, AlertType } from '../../../../sharedModule/alertServices/alert.service';
 import { ProductService } from '../../../services/product.service';
 import { SharedService } from '../../../../sharedModule/sharedServices/shared.service';
+import { ProductDTO, CategoryDTO, ApiResponseDTO } from '../../../../sharedModule/sharedServices/api.dto';
 
 @Component({
   selector: 'app-products',
@@ -11,34 +12,32 @@ import { SharedService } from '../../../../sharedModule/sharedServices/shared.se
   styleUrls: ['./products.component.css']
 })
 export class ProductsComponent {
-  condition:boolean|undefined=false;
-  catDropdown:any|undefined;
+  condition: boolean | undefined = false;
+  catDropdown: CategoryDTO[] = [];
 
-  // @Output() newItemEvent = new EventEmitter<string>();
-  // @ViewChild('navbar') navbar!: ElementRef;
-  productStatus=signal<Array<boolean|null>>([]);
+  productStatus = signal<Array<boolean | null>>([]);
 
-userData={
-  catname:"",
-  catId:0,
-  catnamenew:"",
-  name:"",
-  catID:0,
-  description:"",
-  price:0,
-  ProductId:0,
-  name2:"",
-  catID2:0,
-  description2:"",
-  price2:0,
-  ProductId2:0
-  }
+  userData = {
+    catname: "",
+    catId: 0,
+    catnamenew: "",
+    name: "",
+    catID: 0,
+    description: "",
+    price: 0,
+    ProductId: 0,
+    name2: "",
+    catID2: 0,
+    description2: "",
+    price2: 0,
+    ProductId2: 0
+  };
 
-  checkboxval:any=[];
-  isUserSeeGrid:boolean=false;
-  message: string | any;
-  ipAddress: any;
-  usersDataFromDatabase:any;
+  checkboxval: string[] = [];
+  isUserSeeGrid: boolean = false;
+  message: string = '';
+  ipAddress: string = '';
+  usersDataFromDatabase: ProductDTO[] = [];
 
 userRole= localStorage.getItem('role');
 
@@ -55,137 +54,155 @@ onClickChange(){
 }
 
 
-  changeInput(userId:any,status:any){
-    let newStatus=0;
-    if(status==true){
-      newStatus=0;
-    }else{
-      newStatus=1;
-    }
-    // ()=>(newStatus==1)?true:false
-    let getIndex  = this.usersDataFromDatabase.find((x:any)=>x.id===userId);
-    // this.productStatus.update((getIndex)=>[(newStatus==1)?true:false]);
-    this.productStatus.update ((values) => {
-      // find the index of the user in the array
-      let index = this.usersDataFromDatabase.findIndex ((x: any) => x.id === userId);
-      // create a copy of the array
-      let newValues = [...values];
-      newValues[index] =  newStatus === 1 ? true : false;
-      //  for (var i = 0; i < this.usersDataFromDatabase?.length; i++) {
-      //     newValues[i] = this.usersDataFromDatabase[i].status === 1 ? true : false;
-      //   }
-      // return the new array
+  changeInput(userId: number, status: number | boolean): void {
+    // Convert status to boolean if it's a number (0 = false, 1 = true)
+    const statusBool = typeof status === 'number' ? status === 1 : status;
+    const newStatus = statusBool ? 0 : 1;
+    this.productStatus.update((values) => {
+      const index = this.usersDataFromDatabase.findIndex((x: ProductDTO) => x.id === userId);
+      const newValues = [...values];
+      newValues[index] = newStatus === 1 ? true : false;
       return newValues;
-      });
-    this.product.changeStatus(userId,localStorage.getItem("token"),newStatus).subscribe((data:any)=>{
-      this.message=data.message;
-      this.getProducts();
-      setTimeout(()=>{
-        this.message="";
-        //
-       },3000);
-    },(error:any)=>{
-      this.message=error;
-      setTimeout(()=>{
-         this.message="";
-
-       },3000);
     });
-
+    this.product.changeStatus<ApiResponseDTO>(userId, newStatus).subscribe({
+      next: (data: ApiResponseDTO) => {
+        this.message = data.message || 'Status updated';
+        this.alertService.showAlert(this.message, AlertType.Success);
+        this.getProducts();
+        setTimeout(() => {
+          this.message = "";
+        }, 3000);
+      },
+      error: (error) => {
+        const errorMessage = error?.error?.message || 'Unable to update product status.';
+        this.alertService.showAlert(errorMessage, AlertType.Error);
+        setTimeout(() => {
+          this.message = "";
+        }, 3000);
+      },
+    });
   }
 
- display = "none";
- productData:any;
-openModal(CatUpdate:any,productName:any,productDescription:any,productPrice:any,categoryId:any) {
-  // ,person.name,person.description,person.price
+  display = "none";
+  productData: {
+    ProductId: number;
+    productName: string;
+    productDescription: string;
+    productPrice: number;
+    categoryId: number;
+  } | null = null;
+
+  openModal(CatUpdate: number, productName: string, productDescription: string | undefined, productPrice: number, categoryId: number): void {
     this.display = "block";
-    this.productData={
-      ProductId:CatUpdate,
-      productName:productName,
-      productDescription:productDescription,
-      productPrice:productPrice,
-      categoryId:categoryId,
+    this.productData = {
+      ProductId: CatUpdate,
+      productName: productName,
+      productDescription: productDescription || '',
+      productPrice: productPrice,
+      categoryId: categoryId,
     };
-    this.userData.catID2=this.productData.categoryId;
-    this.userData.ProductId2=this.productData.ProductId;
-    this.userData.price2=this.productData.productPrice;
-    this.userData.name2=this.productData.productName;
-    this.userData.description2=this.productData.productDescription;
+    this.userData.catID2 = this.productData.categoryId;
+    this.userData.ProductId2 = this.productData.ProductId;
+    this.userData.price2 = this.productData.productPrice;
+    this.userData.name2 = this.productData.productName;
+    this.userData.description2 = this.productData.productDescription;
   }
-  onCloseHandled() {
+
+  onCloseHandled(): void {
     this.display = "none";
   }
 
-
-  redirectUser(redirectTo:string){
-    this.router.navigateByUrl("/"+redirectTo);
+  redirectUser(redirectTo: string): void {
+    this.router.navigateByUrl("/" + redirectTo);
   }
 
-  UpdateProduct(productId:any,FromData:any){
-    this.userData.ProductId=productId;
-    this.product.updateProductById(this.userData,localStorage.getItem("token")).subscribe((data:any)=>{
-      this.message=data.message;
-      this.getProducts();
-      if(this.display === "block"){
-        this.onCloseHandled();
+  UpdateProduct(productId: number, FromData: NgForm): void {
+    this.userData.ProductId = productId;
+    this.product.updateProductById<ApiResponseDTO>(this.userData, localStorage.getItem("token") || '').subscribe({
+      next: (data: ApiResponseDTO) => {
+        this.message = data.message || 'Product updated successfully';
+        this.alertService.showAlert(this.message, AlertType.Success);
+        this.getProducts();
+        if (this.display === "block") {
+          this.onCloseHandled();
+          this.getCount.scrollToNav();
+        }
+        FromData.reset();
+      },
+      error: (error) => {
+        const errorMessage = error?.error?.message || 'Unable to update product.';
+        this.alertService.showAlert(errorMessage, AlertType.Error);
+      },
+    });
+    setTimeout(() => {
+      this.message = "";
+    }, 3000);
+  }
+
+  productDelete(ProductId: number): void {
+    this.product.deleteProductById<ApiResponseDTO>(ProductId).subscribe({
+      next: (data: ApiResponseDTO) => {
+        this.message = data.message || 'Product deleted successfully';
+        this.alertService.showAlert(this.message, AlertType.Success);
+        this.getProducts();
         this.getCount.scrollToNav();
-      }
-      FromData.reset();
-     },(error:any)=>{
-      this.message=error.error.message;
-     });
-     setTimeout(()=>{
-       this.message="";
-
-     },3000);
-  }
-  productDelete(ProductId:any){
-    this.product.deleteProductById(ProductId,localStorage.getItem("token")).subscribe((data:any)=>{
-      this.message=data.message;
-      this.getProducts();
-      this.getCount.scrollToNav();
-   },(error:any)=>{
-    this.message=error.error.message;
-   });
-   setTimeout(()=>{
-     this.message="";
-
-   },3000);
+      },
+      error: (error) => {
+        const errorMessage = error?.error?.message || 'Unable to delete product.';
+        this.alertService.showAlert(errorMessage, AlertType.Error);
+      },
+    });
+    setTimeout(() => {
+      this.message = "";
+    }, 3000);
   }
 
-  postData(formData:any):any {
-    this.product.addNewProduct(this.userData,localStorage.getItem("token")).subscribe((data:any)=>{
-      this.message=data.message;
-      this.getProducts();
-   },(error:any)=>{
-    this.message=error.error.message;
-   });
-   formData.reset();
-   setTimeout(()=>{
-     this.message="";
-   },3000);
+  postData(formData: NgForm): void {
+    this.product.addNewProduct<ApiResponseDTO>(this.userData, localStorage.getItem("token")).subscribe({
+      next: (data: ApiResponseDTO) => {
+        this.message = data.message || 'Product added successfully';
+        this.alertService.showAlert(this.message, AlertType.Success);
+        this.getProducts();
+      },
+      error: (error) => {
+        const errorMessage = error?.error?.message || 'Unable to add product.';
+        this.alertService.showAlert(errorMessage, AlertType.Error);
+      },
+    });
+    formData.reset();
+    setTimeout(() => {
+      this.message = "";
+    }, 3000);
   }
 
-  addToCart(productPrice:number,productId:number){
-    this.product.addToCart(localStorage.getItem("token"),productPrice,productId).subscribe((data:any)=>{
-      this.message=data.message;
-      this.getCount.getUserCount();
-   },(error:any)=>{
-    this.message=error.error.message;
-    this.getCount.scrollToNav();
-   });
-   setTimeout(()=>{
-     this.message="";
-   },3000);
+  addToCart(productPrice: number, productId: number): void {
+    this.product.addToCart<ApiResponseDTO>(productPrice, productId).subscribe({
+      next: (data: ApiResponseDTO) => {
+        this.message = data.message || 'Added to cart successfully';
+        this.alertService.showAlert(this.message, AlertType.Success);
+        this.getCount.getUserCount();
+      },
+      error: (error) => {
+        const errorMessage = error?.error?.message || 'Unable to add to cart.';
+        this.alertService.showAlert(errorMessage, AlertType.Error);
+        this.getCount.scrollToNav();
+      },
+    });
+    setTimeout(() => {
+      this.message = "";
+    }, 3000);
   }
 
-  checkboxEventHandler(event: any) {
+  checkboxEventHandler(event: Event): void {
+    const target = event.target as HTMLInputElement;
     const lang = this.checkboxval;
-    if (event.target.checked) {
-      lang.push(event.target.value);
+    if (target.checked) {
+      lang.push(target.value);
     } else {
-      const index = lang.findIndex((x: any) => x === event.target.value);
-      lang.splice(index,1);
+      const index = lang.findIndex((x: string) => x === target.value);
+      if (index > -1) {
+        lang.splice(index, 1);
+      }
     }
   }
 
@@ -201,54 +218,61 @@ openModal(CatUpdate:any,productName:any,productDescription:any,productPrice:any,
     }
   }
 
-  getProducts(){
-    if(this.userRole==='user'){
-      this.product.getAllProductsForUser(localStorage.getItem("token")).subscribe((data:any)=>{
-        this.usersDataFromDatabase=data;
-      this.productStatus.update(() => []);
-      this.productStatus.update((values) => {
-        // find the index of the user in the array
-        let newValues = [...values];
-        for (var i = 0; i < this.usersDataFromDatabase?.length; i++) {
-          // set the value at the corresponding index based on the status property
-          newValues[i] = this.usersDataFromDatabase[i].status === 1 ? true : false;
-          }
-        return newValues;
-        });
-     },(error:any)=>{
-      this.usersDataFromDatabase=error.error.message;
-     });
-      this.product.getAllCategoriesForUser(localStorage.getItem("token")).subscribe((data:any)=>{
-        this.catDropdown=data;
-     },(error:any)=>{
-      this.catDropdown=error.error.message;
-     });
-    }else{
-      this.product.getAllProducts(localStorage.getItem("token")).subscribe((data:any)=>{
-        this.usersDataFromDatabase=data;
-      //   for(var i=0;i == this.usersDataFromDatabase?.length;i++){
-      //     this.productStatus.set([(this.usersDataFromDatabase[i].status===1)?true:false]);
-      // }
-      this.productStatus.update(() => []);
-      this.productStatus.update((values) => {
-        // find the index of the user in the array
-        let newValues = [...values];
-        for (var i = 0; i < this.usersDataFromDatabase?.length; i++) {
-          // set the value at the corresponding index based on the status property
-          newValues[i] = this.usersDataFromDatabase[i].status === 1 ? true : false;
-          }
-        return newValues;
-        });
-     },(error:any)=>{
-      this.usersDataFromDatabase=error.error.message;
-     });
-      this.product.getAllCategories(localStorage.getItem("token")).subscribe((data:any)=>{
-        this.catDropdown=data;
-     },(error:any)=>{
-      this.catDropdown=error.error.message;
-     });
-
-
+  getProducts(): void {
+    if (this.userRole === 'user') {
+      this.product.getAllProductsForUser<ProductDTO[]>().subscribe({
+        next: (data: ProductDTO[]) => {
+          this.usersDataFromDatabase = data;
+          this.productStatus.update(() => []);
+          this.productStatus.update((values) => {
+            const newValues = [...values];
+            for (let i = 0; i < this.usersDataFromDatabase?.length; i++) {
+              newValues[i] = this.usersDataFromDatabase[i].status === 1 ? true : false;
+            }
+            return newValues;
+          });
+        },
+        error: (error) => {
+          const errorMessage = error?.error?.message || 'Unable to load products.';
+          this.alertService.showAlert(errorMessage, AlertType.Error);
+        },
+      });
+      this.product.getAllCategoriesForUser<CategoryDTO[]>().subscribe({
+        next: (data: CategoryDTO[]) => {
+          this.catDropdown = data;
+        },
+        error: (error) => {
+          const errorMessage = error?.error?.message || 'Unable to load categories.';
+          this.alertService.showAlert(errorMessage, AlertType.Error);
+        },
+      });
+    } else {
+      this.product.getAllProducts<ProductDTO[]>().subscribe({
+        next: (data: ProductDTO[]) => {
+          this.usersDataFromDatabase = data;
+          this.productStatus.update(() => []);
+          this.productStatus.update((values) => {
+            const newValues = [...values];
+            for (let i = 0; i < this.usersDataFromDatabase?.length; i++) {
+              newValues[i] = this.usersDataFromDatabase[i].status === 1 ? true : false;
+            }
+            return newValues;
+          });
+        },
+        error: (error) => {
+          const errorMessage = error?.error?.message || 'Unable to load products.';
+          this.alertService.showAlert(errorMessage, AlertType.Error);
+        },
+      });
+      this.product.getAllCategories<CategoryDTO[]>().subscribe({
+        next: (data: CategoryDTO[]) => {
+          this.catDropdown = data;
+        },
+        error: (error) => {
+          const errorMessage = error?.error?.message || 'Unable to load categories.';
+          this.alertService.showAlert(errorMessage, AlertType.Error);
+        },
+      });
     }
   }
 

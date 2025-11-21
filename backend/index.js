@@ -30,5 +30,6 @@ app.use("/cart",require("./routes/cart"));
 app.use("/checkout",require("./routes/checkout"));
 app.use("/count",require("./routes/count"));
 app.use("/message",require("./routes/messenger"));
+app.use("/test", require("./routes/system"));
 
 module.exports = app;

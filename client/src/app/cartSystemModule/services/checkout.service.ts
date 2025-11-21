@@ -1,35 +1,37 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { environment } from '../../../environments/environment';
-
+import { Observable } from 'rxjs';
+import { ApiService } from '../../sharedModule/sharedServices/api.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CheckoutService {
-  response:any;
-  constructor(private Http:HttpClient) {}
-  addNewCategory(CategoryName:string,Token:any){
+  constructor(private api:ApiService) {}
 
-      return this.Http.post(environment.baseUrl+'/category/add',{token:Token,catName:CategoryName});
-  }
-  getAllCartItems(Token:any){
-
-      return this.Http.get(environment.baseUrl+'/checkout/get/'+localStorage.getItem('userId'));
-  }
-  getAllCategoriesForUser(Token:any){
-
-      return this.Http.get(environment.baseUrl+'/category/getUserCategory');
-  }
-  updateCategoryById(catId:any,Token:any,catNewName:string){
-
-      return this.Http.patch(environment.baseUrl+'/category/update',{id:catId,name:catNewName});
+  addNewCategory<T>(categoryName:string, token:any): Observable<T> {
+    return this.api.post<T>('/category/add',{token:token,catName:categoryName});
   }
 
-  getBillCheckoutCompleted(Token:any,uservalue:any,userId:any,PaymentMethod:string|undefined,productInfo:Array<object>,userRole:string|null){
-  // getBillCheckoutCompleted(Token:any,uservalue:any,userId:any,PaymentMethod:string|undefined,productInfo:Array<object>|undefined){
-  return this.Http.post(environment.baseUrl+'/bill/GenerateReport',{id:userId,cardDetails:uservalue,paymentType:PaymentMethod,productInfo:productInfo,role:userRole});
-  // return this.Http.post(environment.baseUrl+'/checkout/complete',{id:userId,cardDetails:uservalue});
+  getAllCartItems<T>(): Observable<T> {
+    return this.api.get<T>('/checkout/get/'+localStorage.getItem('userId'));
+  }
 
+  getAllCategoriesForUser<T>(): Observable<T> {
+    return this.api.get<T>('/category/getUserCategory');
+  }
+
+  updateCategoryById<T>(catId:any, token:any, catNewName:string): Observable<T> {
+    return this.api.patch<T>('/category/update',{id:catId,name:catNewName});
+  }
+
+  getBillCheckoutCompleted<T>(
+    token: string | null,
+    uservalue: unknown,
+    userId: string | null,
+    PaymentMethod: string | undefined,
+    productInfo: Array<object>,
+    userRole: string | null
+  ): Observable<T> {
+    return this.api.post<T>('/bill/GenerateReport',{id:userId,cardDetails:uservalue,paymentType:PaymentMethod,productInfo:productInfo,role:userRole});
   }
 }

@@ -1,11 +1,10 @@
-import { Component, OnChanges, SimpleChanges } from '@angular/core'
-import { HttpClient } from '@angular/common/http'
-import { switchMap, timer } from 'rxjs';
-import { NavigationEnd, Router } from '@angular/router';
-import { AppComponent } from '../../../../app.component';
+import { Component } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { AlertService, AlertType } from '../../../../sharedModule/alertServices/alert.service';
 import { CartService } from '../../../services/cart.service';
 import { SharedService } from '../../../../sharedModule/sharedServices/shared.service';
+import { CartItemWithProductDTO, CheckoutCartResponseDTO, ApiResponseDTO } from '../../../../sharedModule/sharedServices/api.dto';
 
 
 
@@ -18,12 +17,10 @@ styleUrls: ['./cart.component.css'],
 })
 
 
-export class CartComponent{
-
-  message: any | undefined
-  userCartData: any | undefined
-  userCartData2: any | undefined
-  mySubscription:any;
+export class CartComponent {
+  message: string = '';
+  userCartData: CartItemWithProductDTO[] = [];
+  userCartData2: CartItemWithProductDTO[] = [];
   constructor(private UserCart: CartService, Http: HttpClient,private router:Router,
     private getCount:SharedService,
     private alertService:AlertService,
@@ -31,71 +28,74 @@ export class CartComponent{
     this.getUserCart();
   }
 
-  removeFromCart(cartId: any) {
-    this.UserCart.removeFromCart(
-      localStorage.getItem('token'),
-      cartId,
-    ).subscribe(
-      (data: any) => {
-        // this.message = data.message;
-        this.alertService.showAlert(data.message,AlertType.Warning);
+  removeFromCart(cartId: number): void {
+    this.UserCart.removeFromCart<ApiResponseDTO>(cartId).subscribe({
+      next: (data: ApiResponseDTO) => {
+        this.alertService.showAlert(data.message || 'Item removed from cart', AlertType.Warning);
         this.getUserCart();
         this.getCount.getUserCount();
       },
-      (error: any) => {
-        console.log(error)
+      error: (error) => {
+        console.log(error);
+        const errorMessage = error?.error?.message || 'Unable to remove item from cart.';
+        this.alertService.showAlert(errorMessage, AlertType.Error);
       },
-    )
+    });
     setTimeout(() => {
-      this.message="";
-      // window.location.reload()
-    }, 3000)
-  }
-
-  checkoutUser() {
-    this.UserCart.checkOut(
-      localStorage.getItem('token'),
-      localStorage.getItem('userId'),
-    ).subscribe(
-      (data: any) => {
-        this.message = data.message;
-        this.getCount.getUserCount();
-        this.getUserCart();
-
-      },
-      (error: any) => {
-        console.log(error)
-      },
-    );
-
-    setTimeout(() => {
-      this.message="";
-      // window.location.reload()
+      this.message = "";
     }, 3000);
   }
 
-  getUserCart(){
+  checkoutUser(): void {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      this.alertService.showAlert('User ID not found. Please log in again.', AlertType.Error);
+      return;
+    }
 
-    this.UserCart.getUserCart(localStorage.getItem('token')).subscribe(
-      (data: any) => {
-        this.userCartData = data
+    this.UserCart.checkOut<ApiResponseDTO>(userId).subscribe({
+      next: (data: ApiResponseDTO) => {
+        this.message = data.message || 'Checkout successful!';
+        this.alertService.showAlert(this.message, AlertType.Success);
+        this.getCount.getUserCount();
+        this.getUserCart();
       },
-      (error: any) => {
-        console.log(error)
+      error: (error) => {
+        console.log(error);
+        const errorMessage = error?.error?.message || 'Unable to checkout. Please try again.';
+        this.alertService.showAlert(errorMessage, AlertType.Error);
       },
-    )
-    this.UserCart.getUserCart2(localStorage.getItem('token')).subscribe(
-      (data: any) => {
-        this.userCartData2 = data
-      },
-      (error: any) => {
-        console.log(error)
-      },
-    );
+    });
 
-  setTimeout(() => {
-    this.message="";
-  }, 3000);
+    setTimeout(() => {
+      this.message = "";
+    }, 3000);
+  }
+
+  getUserCart(): void {
+    this.UserCart.getUserCart<CartItemWithProductDTO[]>().subscribe({
+      next: (data: CartItemWithProductDTO[]) => {
+        this.userCartData = data;
+      },
+      error: (error) => {
+        console.log(error);
+        const errorMessage = error?.error?.message || 'Unable to load cart items.';
+        this.alertService.showAlert(errorMessage, AlertType.Error);
+      },
+    });
+
+    this.UserCart.getUserCart2<CartItemWithProductDTO[]>().subscribe({
+      next: (data: CartItemWithProductDTO[]) => {
+        this.userCartData2 = data;
+      },
+      error: (error) => {
+        console.log(error);
+      },
+    });
+
+    setTimeout(() => {
+      this.message = "";
+    }, 3000);
   }
 
   getMessageClass() {

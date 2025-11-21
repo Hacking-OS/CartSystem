@@ -1,56 +1,51 @@
-import { Injectable, NgModule } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { ApiService } from '../../sharedModule/sharedServices/api.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductService {
-  constructor(private Http:HttpClient) {}
-  getAllProducts(Token:any){
-      return this.Http.get(environment.baseUrl+'/product/get');
-  }
-  check(Token:any,response:any|null){
-      return this.Http.get(environment.baseUrl+'/product/check');
+  constructor(private api:ApiService) {}
+
+  getAllProducts<T>(): Observable<T> {
+    return this.api.get<T>('/product/get');
   }
 
-  getAllCategories(Token:any){
-   return this.Http.get(environment.baseUrl+'/category/get');
+  check<T>(response:any|null): Observable<T> {
+    return this.api.get<T>('/test/check');
   }
 
-
-  getAllProductsForUser(Token:any){
-
-      return this.Http.get(environment.baseUrl+'/product/getUserProducts');
+  getAllCategories<T>(): Observable<T> {
+    return this.api.get<T>('/category/get');
   }
 
-  getAllCategoriesForUser(Token:any){
-
-   return this.Http.get(environment.baseUrl+'/category/getUserProductsCat');
+  getAllProductsForUser<T>(): Observable<T> {
+    return this.api.get<T>('/product/getUserProducts');
   }
 
-addNewProduct(productData:any,Token:any){
-
-      return this.Http.post(environment.baseUrl+'/product/add',{userInput:productData});
-  }
-addToCart(Token:any,productPrice:any,productId:any){
-
-      return this.Http.post(environment.baseUrl+'/product/addToCart',{productPrice:productPrice,productId:productId,userId:localStorage.getItem('userId')});
-  }
-  updateProductById(productData:any,Token:any){
-
-      return this.Http.patch(environment.baseUrl+'/product/update',{userInput:productData});
+  getAllCategoriesForUser<T>(): Observable<T> {
+    return this.api.get<T>('/category/getUserCategory');
   }
 
-  changeStatus(productData:any,Token:any,newStatus:any){
-
-      return this.Http.patch(environment.baseUrl+'/product/updateStatus',{userInput:productData,status:newStatus});
+  addNewProduct<T>(productData:any,Token:any): Observable<T> {
+    return this.api.post<T>('/product/add',{userInput:productData});
   }
 
-deleteProductById(productId:any,Token:any){
-
-      return this.Http.delete(environment.baseUrl+'/product/delete/'+productId);
+  addToCart<T>(productPrice:any,productId:any): Observable<T> {
+    return this.api.post<T>('/product/addToCart',{productPrice:productPrice,productId:productId,userId:localStorage.getItem('userId')});
   }
 
+  updateProductById<T>(productData:any,Token:any): Observable<T> {
+    return this.api.patch<T>('/product/update',{userInput:productData});
+  }
+
+  changeStatus<T>(productData:any,newStatus:any): Observable<T> {
+    return this.api.patch<T>('/product/updateStatus',{userInput:productData,status:newStatus});
+  }
+
+  deleteProductById<T>(productId:any): Observable<T> {
+    return this.api.delete<T>('/product/delete/'+productId);
+  }
 }
 

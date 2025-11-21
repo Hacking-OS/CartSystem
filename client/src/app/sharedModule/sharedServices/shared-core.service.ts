@@ -20,12 +20,12 @@ export class SharedCoreService {
 
   public getUserCount() :Observable<Record<string, any>> {
     // requires: import { forkJoin } from 'rxjs'; import { tap } from 'rxjs/operators';
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || '';
     const bill$ = (localStorage.getItem('role') === 'admin')
-      ? this.count.AdminTotalCountBill(token)
-      : this.count.billCount(token);
-    const cart$ = this.count.cartCount(token);
-    const checkout$ = this.count.checkOutCount(token);
+      ? this.count.AdminTotalCountBill<any>()
+      : this.count.billCount<any>();
+    const cart$ = this.count.cartCount<any>();
+    const checkout$ = this.count.checkOutCount<any>();
 
     return forkJoin([bill$, cart$, checkout$]).pipe(
       tap(([bill, cart, checkout]) => {

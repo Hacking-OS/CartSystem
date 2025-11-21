@@ -1,51 +1,52 @@
-<!-- <p>login works!</p> -->
+<section class="app-auth">
+  <div class="auth-card">
+    <h2>Welcome back</h2>
+    <p>Access your CartSystem workspace.</p>
 
-<div *ngIf="message!=null"
-  ngClass="'alert alert-danger':message!=='Login SuccessFully!','alert alert-success':message==='Login SuccessFully!'">
-  {{ message }}</div>
-<!--
-  <div class="card bg-dark"> -->
-<div class="container-fluid">
-<div class="m-5">
-<form #myForm='ngForm' (ngSubmit)="postData(myForm)">
-  <div class="container">
-    <div class="row mb-4">
-      <div class="col-md-5">
-        <div class="form-outline mb-4">
-          <input class="form-control" type="email" #email="ngModel" name="email" [(ngModel)]="userData.email"
-            placeholder="Enter email: " required minlength="4">
-          <div *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="alert alert-danger" role="alert">
-            <div *ngIf="email?.errors?.['required']">Email is required. </div>
-            <div *ngIf="email?.errors?.['minlength']">Email must be greater than < 3. </div>
-            </div>
-            <label class="form-label" for="form2Example1">Email address</label>
-          </div>
-          <br>
-          <br>
-          <div class="form-outline mb-4">
-            <input class="form-control" type="password" #password="ngModel" name="password"
-              [(ngModel)]="userData.password" placeholder="Enter Password: " required minlength="4">
-            <div *ngIf="password?.invalid && (password?.dirty || password?.touched)" class="alert alert-danger"
-              role="alert">
-              <div *ngIf="password?.errors?.['required']">Password is required. </div>
-              <div *ngIf="password?.errors?.['minlength']">Password must be greater than < 3. </div>
-              </div>
-              <label class="form-label" for="form2Example2">Password</label>
-            </div>
-
-                <button type="submit" class="btn btn-primary mr-5" name="submit" [disabled]="myForm.invalid">submit</button>
-
-                <button type="button" class="btn btn-warning mr-5" (click)="redirectUser('user/signup')">signup</button>
-
-                <button type="button" class="btn btn-info" (click)="redirectUser('user/forgetpassword')">forget
-                  password?</button>
-
-            </div>
-          </div>
-        </div>
-      </form>
+    <div class="app-alert app-alert--danger" *ngIf="message && message !== 'Login SuccessFully!'">
+      {{ message }}
     </div>
+    <div class="app-alert app-alert--success" *ngIf="message === 'Login SuccessFully!'">
+      {{ message }}
     </div>
 
-<!-- </div>
-</div> -->
+    <form #myForm="ngForm" (ngSubmit)="postData(myForm)">
+      <div>
+        <input
+          class="form-control"
+          type="email"
+          #email="ngModel"
+          name="email"
+          [(ngModel)]="userData.email"
+          placeholder="Email address"
+          required
+          minlength="4">
+      </div>
+
+      <div>
+        <input
+          class="form-control"
+          type="password"
+          #password="ngModel"
+          name="password"
+          [(ngModel)]="userData.password"
+          placeholder="Password"
+          required
+          minlength="4">
+      </div>
+
+      <button class="app-btn" type="submit" [disabled]="myForm.invalid">
+        Sign in
+      </button>
+    </form>
+
+    <div class="auth-card__footer">
+      <button class="app-btn app-btn--ghost" type="button" (click)="redirectUser('user/signup')">
+        Create account
+      </button>
+      <button class="app-btn app-btn--ghost" type="button" (click)="redirectUser('user/forgetpassword')">
+        Forgot password
+      </button>
+    </div>
+  </div>
+</section>

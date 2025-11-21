@@ -13,7 +13,7 @@ export class AuthUserGuard  {
     canActivate(
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
-      this.checkConnection.check(localStorage.getItem('token'),"").subscribe((data:any)=>{},(error:any)=>{
+      this.checkConnection.check<any>(localStorage.getItem('token')).subscribe((data:any)=>{},(error:any)=>{
         // localStorage.removeItem('token');
         // localStorage.removeItem('role');
         // localStorage.removeItem('userId');

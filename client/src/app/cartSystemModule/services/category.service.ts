@@ -1,27 +1,26 @@
-import { Injectable, NgModule } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Token } from '@angular/compiler';
-import { environment } from '../../../environments/environment';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { ApiService } from '../../sharedModule/sharedServices/api.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CategoryService {
-  constructor(private Http:HttpClient) {}
-  addNewCategory(CategoryName:string,Token:any){
+  constructor(private api:ApiService) {}
 
-      return this.Http.post(environment.baseUrl+'/category/add',{token:Token,catName:CategoryName});
+  addNewCategory<T>(CategoryName:string,Token:any): Observable<T> {
+    return this.api.post<T>('/category/add',{token:Token,catName:CategoryName});
   }
-  getAllCategories(Token:any){
 
-      return this.Http.get(environment.baseUrl+'/category/get');
+  getAllCategories<T>(): Observable<T> {
+    return this.api.get<T>('/category/get');
   }
-  getAllCategoriesForUser(Token:any){
 
-      return this.Http.get(environment.baseUrl+'/category/getUserCategory');
+  getAllCategoriesForUser<T>(): Observable<T> {
+    return this.api.get<T>('/category/getUserCategory');
   }
-  updateCategoryById(catId:any,Token:any,catNewName:string){
 
-      return this.Http.patch(environment.baseUrl+'/category/update',{id:catId,name:catNewName});
+  updateCategoryById<T>(catId:any,Token:any,catNewName:string): Observable<T> {
+    return this.api.patch<T>('/category/update',{id:catId,name:catNewName});
   }
 }

@@ -1,45 +1,34 @@
-import { Injectable, Input, NgModule } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { Injectable } from '@angular/core';
+import { ApiService } from '../../sharedModule/sharedServices/api.service';
+import { Observable } from 'rxjs';
 
 
 @Injectable({
   providedIn: 'root'
 })
 export class BillService {
-  constructor(private Http:HttpClient) {}
-  getAllConsumerBill(Token:any){
+  constructor(private api:ApiService) {}
+  getAllConsumerBill<T>(Token:any): Observable<T> {
 
-      return this.Http.get(environment.baseUrl+'/bill/getBills');
+      return this.api.get<T>('/bill/getBills');
   }
-  getAllUserBill(Token:any){
+  getAllUserBill<T>(Token:any): Observable<T> {
 
-      return this.Http.get(environment.baseUrl+'/bill/getBillsUsers/'+localStorage.getItem('userId'));
+      return this.api.get<T>('/bill/getBillsUsers/'+localStorage.getItem('userId'));
   }
 
-  deleteBill(uuid:any,Token:any){
+  deleteBill<T>(uuid:any,Token:any): Observable<T>          {
 
-    //  id:uuid
-      return this.Http.delete(environment.baseUrl+'/bill/delete/'+uuid);
+      return this.api.delete<T>('/bill/delete/'+uuid);
   }
-  generateReport(postUser:any,Token:any){
-    let header=new HttpHeaders({
-      'Content-Type':  'application/json',
-      Authorization: "Bearer "+Token
-     });
-    //  id:uuid
-      return this.Http.post(environment.baseUrl+'/bill/GenerateReport/',{id:postUser});
+  generateReport<T>(postUser:any,Token:any): Observable<T>    {
+      return this.api.post<T>('/bill/GenerateReport/',{id:postUser});
   }
 
 
-  getPdf(postUser:any,Token:any,userRole:string|null){
-    let header=new HttpHeaders({
-      'Content-Type':  'application/json',
-      Authorization: "Bearer "+Token
-     },
-     );
+  getPdf<T>(postUser:any,Token:any,userRole:string|null): Observable<T> {
      let userId=localStorage.getItem('userId');
-     return this.Http.post(environment.baseUrl+'/bill/getPdf/',{id:postUser,userId:userId,role:userRole},{headers:header,  responseType: 'blob'});
+     return this.api.post<T>('/bill/getPdf/',{id:postUser,userId:userId,role:userRole},{ responseType:'blob'});
 
   }
 }

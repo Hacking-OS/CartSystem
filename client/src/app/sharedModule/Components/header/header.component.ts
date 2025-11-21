@@ -7,7 +7,7 @@ import { SharedService } from '../../sharedServices/shared.service';
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
-  styleUrl: './header.component.css'
+  styleUrls: ['./header.component.css']
 })
 export class HeaderComponent {
   @Input() isUser: boolean = false;
@@ -15,6 +15,7 @@ export class HeaderComponent {
   user = 0;
   isUserAdmin = 0;
   userRole= localStorage.getItem('role');
+  userName = localStorage.getItem('userName') || 'Guest';
   message:any|undefined;
  responseCountBill:any=[];
  responseCountCart:any=[];

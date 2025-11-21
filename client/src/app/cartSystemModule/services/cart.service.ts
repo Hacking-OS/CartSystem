@@ -1,29 +1,25 @@
-import { Injectable, NgModule } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { ApiService } from '../../sharedModule/sharedServices/api.service';
 @Injectable({
   providedIn: 'root'
 })
 export class CartService {
-  constructor(private Http:HttpClient) {}
+  constructor(private api: ApiService) {}
 
-  checkOut(Token:any,userId:any){
-
-      return this.Http.post(environment.baseUrl+'/cart/checkout',{id:userId});
+  checkOut<T>(userId: any): Observable<T> {
+    return this.api.post<T>('/cart/checkout', { id: userId });
   }
 
-  getUserCart(Token:any){
-
-      return this.Http.get(environment.baseUrl+'/cart/get');
-  }
-  getUserCart2(Token:any){
-
-      return this.Http.get(environment.baseUrl+'/cart/getRemoved');
+  getUserCart<T>(): Observable<T> {
+    return this.api.get<T>('/cart/get');
   }
 
+  getUserCart2<T>(): Observable<T> {
+    return this.api.get<T>('/cart/getRemoved');
+  }
 
-  removeFromCart(Token:any,cartId:any){
-
-      return this.Http.post(environment.baseUrl+'/cart/remove',{id:cartId});
+  removeFromCart<T>(cartId: any): Observable<T> {
+    return this.api.post<T>('/cart/remove', { id: cartId });
   }
 }
