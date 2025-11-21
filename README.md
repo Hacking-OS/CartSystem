@@ -1,5 +1,5 @@
 # CartSystem (Demo Build)
-This repository is a **demo-only** snapshot of the CartSystem platform. It mirrors the production architecture but replaces sensitive configuration, data seeds, and several business flows with safe defaults so it can be shared publicly. Use it for reference, walkthroughs, or experimentation—not as a drop-in replacement for the original service.
+This repository is a **demo-only** snapshot of the CartSystem platform. It mirrors the production architecture but replaces sensitive configuration, data seeds, and several business flows with safe defaults so it can be shared publicly. Use it for reference, walkthroughs, or experimentation—not as a drop-in replacement for the original service. High-level architecture and day-two operations live under `docs/overview.md` and `docs/maintenance.md`.
 
 - Secrets and SMTP credentials are placeholders.
 - Database schema/data are expected to be recreated locally.
@@ -11,15 +11,17 @@ CartSystem remains a full-stack shopping cart and billing platform: the backend 
 - **Authentication**: Access tokens expire in minutes (`0.01h`) to force rapid refresh cycles during demos; refresh tokens inherit short lifetimes as well.
 - **Checkout & Billing**: `/bill/GenerateReport` still writes PDFs to `backend/Generatedpdf`, but the email transport uses obvious placeholders (see `routes/bill.js`) and logs success/failure into the `emailSent` table instead of shipping real mail.
 - **Shared Services**: Some Angular services (e.g., `SharedCoreService`) are intentionally scoped and wired manually for experimentation, so the DI pattern differs from the production build.
-- **Messenger**: User messages are stored locally in `user_message` with no push notifications; admins poll via `/message/get`.
+- **Real-time Messenger & Approvals**: Group chat, approval status, and typing indicators are powered by Socket.IO. Events are centralized through `backend/socket.js` (server) and `client/src/app/sharedModule/sharedServices/socket.service.ts` (client), with strict DTOs for every payload.
 - **Environment Binding**: The backend binds to the host defined in `client/src/environments/enviroment.js`, making it easy to present the API on a LAN/IP chosen for demos.
 - **Data Hygiene**: Debug/spec folders are included so you can stub or mock endpoints quickly without touching main modules.
+- **Database Bootstrap**: `server.js` now creates the configured MySQL schema (if missing) and runs `backend/database/seed.js` on startup so demo accounts, payment statuses, showcase groups, and sample messages are always available.
 
 ## Tech Stack
 - Node.js 18+ / Express 4 for the REST API (`backend/`)
 - MySQL 5.7+/8.0 for persistence (`backend/connection.js`)
 - Angular 17 + RxJS for the client (`client/`)
 - jsonwebtoken for access/refresh tokens (`backend/services/authentication.js`, `routes/user.js`)
+- Socket.IO 4 for bidirectional events (`backend/socket.js`, `client/src/app/sharedModule/sharedServices/socket.service.ts`)
 - EJS + html-pdf + PhantomJS for invoice rendering (`backend/routes/bill.js`, `routes/report.ejs`)
 - Nodemailer for transactional email (`backend/routes/user.js`, `routes/bill.js`)
 
@@ -29,12 +31,14 @@ CartSystem remains a full-stack shopping cart and billing platform: the backend 
   - `index.js` wires all route modules (`users`, `category`, `product`, `cart`, `checkout`, `bill`, `dashboard`, `count`, `message`).
   - `routes/` contains feature-specific route handlers (category/product CRUD, billing, cart, checkout, dashboard metrics, messenger, etc.).
   - `services/authentication.js` and `services/checkRole.js` implement JWT validation and role-based authorization.
+  - `socket.js` exposes `setIO`/`getIO` so any route can emit centralized Socket.IO events without circular dependencies.
 - `client/` – Angular workspace split into feature modules:
   - `userModule` handles login, signup, forgot-password, and messenger UI.
   - `cartSystemModule` covers storefront browsing, cart, checkout, billing flows, and product/category screens.
   - `adminModule` exposes dashboards, approvals, and counts for administrators.
   - `sharedModule` contains layout (header/footer/sidebar), guards, interceptors, shared services, and UI utilities.
   - `sharedModule/guards` enforce JWT state, refresh tokens, and user presence before navigation.
+- `client/src/app/sharedModule/sharedServices/api.dto.ts` & `socket.dto.ts` define all API and Socket.IO payload contracts consumed across modules.
 - `README.md` – this document.
 
 ## Feature Highlights
@@ -44,7 +48,8 @@ CartSystem remains a full-stack shopping cart and billing platform: the backend 
 - **Cart & Checkout**: `/cart` endpoints let users manage `user_cart` entries, mark items for checkout, and proceed to payment confirmation.
 - **Billing & Invoicing**: `/bill/GenerateReport` aggregates checkout items, persists a `bill` record, renders an EJS template to PDF (stored in `backend/Generatedpdf`), emails the invoice, and resets the cart. `/bill/getPdf` regenerates/downstreams invoices with role-aware access control.
 - **Dashboard & Counts**: `/dashboard/details` and `/count` summarize total categories, products, bills, and other KPIs for the admin dashboard.
-- **Messaging**: `/message` exposes CRUD over `user_message` records so users can reach support from the messenger component.
+- **Messaging & Approvals in Real Time**: Socket.IO rooms broadcast group creation, join requests, approvals, new members, messages, and typing indicators (`messenger:*` + `approval:*` namespaces). Angular listens through `SocketService`, with DTOs guarding compile-time safety.
+- **Type-Safe Angular DTOs**: Every Angular service/component imports shared DTOs instead of `any`, aligning UI expectations with backend responses and preventing template errors.
 - **Angular SPA**: Routing and shared services wrap all API calls via module-specific `*-end-point.service.ts` files that reuse the base URL from `src/environments/environment.ts`.
 
 ## Prerequisites
@@ -66,8 +71,8 @@ CartSystem remains a full-stack shopping cart and billing platform: the backend 
    npm install
    ```
 2. **Database**
-   - Create the schema referenced in `backend/connection.js` (`mydb` by default) or update that file with your host/user/password/database.
-   - Populate required tables: `users`, `category`, `product`, `user_cart`, `bill`, `emailSent`, `user_message`, etc. (a SQL dump is not included, so reuse your own schema or export from an existing instance).
+   - Ensure the MySQL user in `backend/connection.js` (or `.env`) can create databases. `server.js` automatically issues `CREATE DATABASE IF NOT EXISTS <name>` based on `config/database`.
+   - On first boot the server also runs `backend/database/seed.js`, inserting demo admins/users, categories, products, chat groups, sample messages, and `PaymentStatus` rows. Re-run manually anytime with `cd backend && node database/seed.js`.
 3. **Backend environment**
    - Copy `.env.example` (create one if missing) into `backend/.env` with:
      ```
@@ -150,6 +155,10 @@ All routes rely on the shared MySQL connection exported from `backend/connection
 - **CORS issues**: Allowed origins live in `backend/index.js` (`cors` middleware). Add additional URLs if you serve the Angular app from another host.
 - **Binding IP**: `backend/server.js` imports `client/src/environments/enviroment.js` for the host name. Set `enviroment.baseUrl` to `127.0.0.1` or an external IP when deploying.
 - **Angular base URL**: All HTTP services rely on `environment.baseUrl`. Keep it synchronized with the backend host/port to avoid network mismatches.
+
+## Documentation
+- `docs/overview.md` – architecture map, module interactions, and primary workflows.
+- `docs/maintenance.md` – day-two operations: seeding, environment rotation, Socket.IO troubleshooting, and verification checklists.
 
 ## Contributing
 1. Fork and create a feature branch.
