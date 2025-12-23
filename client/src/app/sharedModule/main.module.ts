@@ -16,6 +16,8 @@ import { MainService } from './HttpServices/main.service';
 import { TestingService } from './sharedServices/testing.service';
 import { UtilitiesService } from './sharedServices/utilities.service';
 import { FeatureModule } from './features/feature.module';
+import { AlertService } from './alertServices/alert.service';
+import { CspNonceService } from './sharedServices/security/cspnounce.service';
 
 @NgModule({
   declarations: [
@@ -38,6 +40,8 @@ import { FeatureModule } from './features/feature.module';
     MainService,
     UtilitiesService,
     TestingService,
+    AlertService,
+    CspNonceService,
     // { provide: HTTP_INTERCEPTORS, useClass: AutherizeInterceptor, multi: true },
   ],
   exports: [

@@ -2,11 +2,7 @@ import { Injectable, NgModule } from '@angular/core';
 import { ToastrService, provideToastr } from 'ngx-toastr';
 import { BehaviorSubject, Observable } from 'rxjs';
 // import { Dialog } from '@material-ui/core';
-@Injectable({
-  providedIn: 'root',
-})
-@NgModule({})
-
+@Injectable()
 export class AlertService {
   private alertsSubject = new BehaviorSubject<AlertMessage[]>([]);
 

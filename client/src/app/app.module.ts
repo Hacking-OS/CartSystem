@@ -11,12 +11,13 @@ import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { NgToastModule } from 'ng-angular-popup';
 import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
 import { ToastrModule } from 'ngx-toastr';
-import { AlertService } from './sharedModule/alertServices/alert.service';
+// import { AlertService } from './sharedModule/alertServices/alert.service';
+// import { CspNonceService } from './sharedModule/sharedServices/security/cspnounce.service';
 import { AuthUserGuard } from './sharedModule/guards/auth-user.guard';
 import { UserFoundGuard } from './sharedModule/guards/user-found.guard';
 import { UserNotFoundGuard } from './sharedModule/guards/user-not-found.guard';
-import { CspNonceService } from './sharedModule/sharedServices/security/cspnounce.service';
 import { AutherizeInterceptor } from './sharedModule/interceptors/autherize.interceptor';
+import { MainModule } from './sharedModule/main.module';
 
 
 
@@ -41,8 +42,7 @@ import { AutherizeInterceptor } from './sharedModule/interceptors/autherize.inte
       positionClass: 'toast-top-right', // Position of toastr
       preventDuplicates: true, // Prevent duplicate toasts
     }),
-    AlertService,
-    CspNonceService,
+    MainModule,
   ],
   providers: [
     AuthUserGuard,

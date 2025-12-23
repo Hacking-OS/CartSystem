@@ -30,7 +30,6 @@ import { Cart_Service } from './HttpServices/cart.service';
   ],
   providers: [
     Cart_Service,
-    { provide: HTTP_INTERCEPTORS, useClass: AutherizeInterceptor, multi: true },
   ],
 })
 export class cartModule {}

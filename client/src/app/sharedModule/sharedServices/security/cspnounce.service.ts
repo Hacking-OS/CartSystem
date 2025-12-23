@@ -64,12 +64,7 @@
 import { Injectable, NgModule } from '@angular/core';
 import * as CryptoJS from 'crypto-js';
 
-@Injectable({
-  providedIn: 'root',
-})
-
-@NgModule({})
-
+@Injectable()
 export class CspNonceService {
   async generateNonce(): Promise<string> {
     try {
