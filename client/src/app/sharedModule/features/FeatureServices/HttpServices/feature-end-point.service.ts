@@ -1,5 +1,6 @@
 import { Injectable, NgModule } from '@angular/core';
-@NgModule({})
+
+@Injectable()
 export class FeatureEndPointService {
 
   constructor() { }
