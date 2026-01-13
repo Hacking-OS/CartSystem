@@ -7,6 +7,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 // import { AutherizeInterceptor } from '../interceptors/autherize.interceptor';
 import { FileUploaderComponent } from './file-uploader/file-uploader.component';
 import { ProgressBarComponent } from './progress-bar/progress-bar.component';
+import { FeatureService } from './FeatureServices/HttpServices/feature.service';
 
 
 
@@ -21,6 +22,7 @@ import { ProgressBarComponent } from './progress-bar/progress-bar.component';
     ReactiveFormsModule,
   ],
   providers:[
+    FeatureService,
   // { provide: HTTP_INTERCEPTORS, useClass: AutherizeInterceptor, multi: true },
  ],
  exports:[FileUploaderComponent,ProgressBarComponent]
